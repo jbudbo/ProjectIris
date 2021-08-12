@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using RabbitMQ.Client;
 using System.Threading.Tasks;
 
 namespace Ingress
@@ -21,7 +22,21 @@ namespace Ingress
         /// <param name="args"></param>
         /// <returns></returns>
         static IHostBuilder CreateHostBuilder(string[] args) => Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration(cfg => cfg.AddEnvironmentVariables("IRIS_"))
-            .ConfigureServices((_, services) => services.AddHostedService<IngressWorker>());
+            //  Poke in our NETCORE_ environment variables for later host setup
+            .ConfigureHostConfiguration(cfg => cfg.AddEnvironmentVariables("NETCORE_"))
+            //  Poke in our IRIS_ configuration points
+            .ConfigureAppConfiguration((hbc, cfg) =>
+            {
+                if (hbc.HostingEnvironment.IsDevelopment())
+                    cfg.AddUserSecrets<Program>();
+
+                cfg.AddEnvironmentVariables("IRIS_");
+            })
+            .ConfigureServices((_, services) =>
+            {
+                services
+                    .AddHostedService<IngressWorker>()
+                    .AddSingleton<IConnectionFactory,ConnectionFactory>();
+            });
     }
 }
