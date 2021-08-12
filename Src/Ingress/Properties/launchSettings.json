@@ -4,7 +4,7 @@
       "commandName": "Project",
       "environmentVariables": {
         "NETCORE_ENVIRONMENT": "Development",
-        "IRIS_TWITTER_ENDPOINT": "https://api.twitter.com/2/tweets/sample/stream"
+        "IRIS_TWITTER_ENDPOINT": "/2/tweets/sample/stream"
       }
     }
   }

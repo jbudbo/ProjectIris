@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Ingress
 {
+    using Models;
+    using Support;
+
     sealed class Program
     {
         /// <summary>
@@ -32,11 +35,16 @@ namespace Ingress
 
                 cfg.AddEnvironmentVariables("IRIS_");
             })
-            .ConfigureServices((_, services) =>
+            .ConfigureServices((hbc, services) =>
             {
                 services
+                    .Configure<TwitterOptions>(o =>
+                    {
+                        o.SetApiUrl(hbc.Configuration["IRIS_TWITTER_ENDPOINT"]);
+                    })
                     .AddHostedService<IngressWorker>()
-                    .AddSingleton<IConnectionFactory,ConnectionFactory>();
+                    .AddSingleton<IConnectionFactory, ConnectionFactory>()
+                    .AddTwitterClient(hbc.Configuration);
             });
     }
 }
