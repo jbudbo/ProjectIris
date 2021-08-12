@@ -24,8 +24,7 @@ namespace Ingress
             ILogger<IngressWorker> logger, 
             IOptions<TwitterOptions> options,
             IConnectionFactory connectionFactory,
-            ITwitterClient client,
-            IHostApplicationLifetime applicationLifetime)
+            ITwitterClient client)
         {
             this.logger = logger;
             this.client = client;
@@ -40,7 +39,7 @@ namespace Ingress
         }
         private void TweetReceived(object sender, string tweet)
         {
-            logger.LogInformation("Tweet: {0}...", tweet.Substring(0, 20));
+            logger.LogInformation("Tweet: {0}...", tweet);
             channel.BasicPublish(string.Empty, "Twitter", body: Encoding.UTF8.GetBytes(tweet));
         }
 

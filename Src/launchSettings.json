@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "composeLaunchAction": "LaunchBrowser",
+      "composeLaunchServiceName": "ingress",
+      "composeLaunchUrl": "http://localhost:8090",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "ingress": "StartDebugging",
+        "rabbit": "StartWithoutDebugging"
+      }
+    }
+  }
+}

@@ -3,9 +3,12 @@
     "Ingress": {
       "commandName": "Project",
       "environmentVariables": {
-        "NETCORE_ENVIRONMENT": "Development",
-        "IRIS_TWITTER_ENDPOINT": "/2/tweets/sample/stream"
+        "IRIS_TWITTER_ENDPOINT": "/2/tweets/sample/stream",
+        "NETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "Docker": {
+      "commandName": "Docker"
     }
   }
 }

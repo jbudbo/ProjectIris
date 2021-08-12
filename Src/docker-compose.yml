@@ -1,0 +1,28 @@
+version: '3.4'
+
+services:
+    rabbit:
+        image: rabbitmq:management-alpine
+        hostname: rabbit
+        container_name: rabbit
+        ports:
+            - 8090:15672
+        networks:
+            - Iris
+
+    ingress:
+        image: ${DOCKER_REGISTRY-}ingress
+        build:
+            context: .
+            dockerfile: Ingress/Dockerfile
+        depends_on:
+            - rabbit
+        networks:
+            - Iris
+        environment:
+            IRIS_TWITTER_BEARER: "AAAAAAAAAAAAAAAAAAAAAAeUSQEAAAAAARyJIkHJYEXkpQxTuSJjqC%2B7kTI%3D8kiLOfNYaYodoQa4w5LTXMnrFMdLqDr41UtPpAQkHUbx0pc6lp"
+            IRIS_TWITTER_ENDPOINT: "/2/tweets/sample/stream"
+
+networks:
+    Iris:
+        name: Iris
