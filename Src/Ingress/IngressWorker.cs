@@ -3,11 +3,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using System;
-using System.IO;
-using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace Ingress
 {
@@ -26,7 +24,8 @@ namespace Ingress
             ILogger<IngressWorker> logger, 
             IOptions<TwitterOptions> options,
             IConnectionFactory connectionFactory,
-            ITwitterClient client)
+            ITwitterClient client,
+            IHostApplicationLifetime applicationLifetime)
         {
             this.logger = logger;
             this.client = client;
@@ -34,35 +33,32 @@ namespace Ingress
 
             logger.LogInformation("Connecting to RabbitMQ");
             //  Tries each host in the list and connects to the first it can find, therefore since we're orchestrated
-            //       Let's make happy path a Host by the name of rabbit and if that doesn't work tyr localhost
+            //       Let's make happy path a Host by the name of rabbit and if that doesn't work try localhost
             connection = connectionFactory.CreateConnection(new[] { "rabbit", "localhost" }, Environment.MachineName);
             channel = connection.CreateModel();
             channel.QueueDeclare("Twitter", true, false, true);
+        }
+        private void TweetReceived(object sender, string tweet)
+        {
+            logger.LogInformation("Tweet: {0}...", tweet.Substring(0, 20));
+            channel.BasicPublish(string.Empty, "Twitter", body: Encoding.UTF8.GetBytes(tweet));
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             logger.LogInformation("Ingress worker coming up");
 
-            //await using Stream s = await client.GetStreamAsync(options.Value.ApiUrl, cancellationToken);
-            //await using BufferedStream bs = new (s);
-            //using StreamReader streamReader = new (bs);
+            client.OnTweet += TweetReceived;
 
-            //for (int i = 0; i < 10; i++)
-            //{
-            //    var tweet = await streamReader.ReadLineAsync();
-            //    channel.BasicPublish(string.Empty, "Twitter", body: Encoding.UTF8.GetBytes(tweet));
-            //}
-
-            return Task.CompletedTask;
+            return client.ConnectAsync(options.Value.ApiUrl, cancellationToken);
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
             logger.LogInformation("Ingress worker going down");
 
-            //client.CancelPendingRequests();
-            //client.Dispose();
+            client.Drop();
+            client.OnTweet -= TweetReceived;
 
             channel.Close();
             channel.Dispose();

@@ -11,7 +11,7 @@ namespace Ingress.Models
             if (string.IsNullOrWhiteSpace(url))
                 return;
 
-            ApiUrl = new Uri(url);
+            ApiUrl = new Uri(url, UriKind.Relative);
         }
     }
 }
