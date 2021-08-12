@@ -1,4 +1,4 @@
-The Twitter API provides a stream endpoint that delivers a roughly 1% random sample of publicly available Tweets in real-time. In this assignment you will build an application that utilizes that endpoint and processes incoming tweets to compute various statistics. We'd like to see this as a .NET Core or .NET Framework project, but otherwise feel free to use any libraries or frameworks you want to accomplish this task.
+The Twitter API provides a [stream endpoint](https://developer.twitter.com/en/docs/tutorials/consuming-streaming-data) that delivers a roughly 1% random sample of publicly available Tweets in real-time. In this assignment you will build an application that utilizes that endpoint and processes incoming tweets to compute various statistics. We'd like to see this as a .NET Core or .NET Framework project, but otherwise feel free to use any libraries or frameworks you want to accomplish this task.
 
 The Twitter API v2 sampled stream endpoint provides a random sample of approximately 1% of the full tweet stream. Your app should consume this sample stream and keep track of the following:
 
