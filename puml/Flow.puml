@@ -1,0 +1,36 @@
+@startuml
+
+|Ingress|
+start
+:Tweet;
+:Tweet Queued;
+
+-[dotted]->
+|Normalization|
+:New Item Queued Event;
+
+fork
+:Worker 1;
+:Process Tweet Metrics;
+:Persist Metrics;
+
+fork again
+:Worker 2;
+:Process Tweet Metrics;
+:Persist Metrics;
+
+fork again
+:Worker N;
+:Process Tweet Metrics;
+:Persist Metrics;
+
+end fork
+
+-[dotted]->
+|Usage|
+:Metrics Updated Event;
+:Server Notification to Client;
+:UI Dashboard Update;
+
+stop
+@enduml
