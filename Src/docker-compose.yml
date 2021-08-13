@@ -1,12 +1,6 @@
 version: '3.8'
 
 services:
-    rabbit:
-        image: rabbitmq:management-alpine
-        ports:
-            - 8090:15672
-        networks:
-            - Iris
 
     redis:
         image: redis:alpine
@@ -34,10 +28,8 @@ services:
             context: .
             dockerfile: Worker/Dockerfile
         deploy:
-            replicas: 1
+            replicas: 3
         depends_on:
-            rabbit:
-                condition: service_started
             redis:
                 condition: service_healthy
         networks:
@@ -49,14 +41,13 @@ services:
             context: .
             dockerfile: Ingress/Dockerfile
         depends_on:
-            - rabbit
+            redis:
+                condition: service_healthy
         networks:
             - Iris
         environment:
             IRIS_TWITTER_BEARER: "AAAAAAAAAAAAAAAAAAAAAAeUSQEAAAAAARyJIkHJYEXkpQxTuSJjqC%2B7kTI%3D8kiLOfNYaYodoQa4w5LTXMnrFMdLqDr41UtPpAQkHUbx0pc6lp"
             IRIS_TWITTER_ENDPOINT: "/2/tweets/sample/stream"
-            Logging__LogLevel__Microsoft: Error
-            Logging__LogLevel__IngressWorker: Error
     
 networks:
     Iris:

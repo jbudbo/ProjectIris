@@ -21,9 +21,7 @@ namespace Ingress.Clients
             baseClient = httpClient;
         }
 
-        public event EventHandler<string> OnTweet;
-
-        public async Task ConnectAsync(Uri uri, CancellationToken cancellationToken)
+        public async Task StartAsync(Uri uri, Func<string, Task> OnTweet, CancellationToken cancellationToken)
         {
             logger.LogInformation($"Connecting to {uri}");
             await using Stream s = await baseClient.GetStreamAsync(uri, cancellationToken);
@@ -32,7 +30,7 @@ namespace Ingress.Clients
 
             while (!cancellationToken.IsCancellationRequested && !streamReader.EndOfStream)
             {
-                OnTweet(this, await streamReader.ReadLineAsync());
+                await OnTweet(await streamReader.ReadLineAsync());
             }
         }
 

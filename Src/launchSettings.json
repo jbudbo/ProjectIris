@@ -7,8 +7,8 @@
       "commandVersion": "1.0",
       "serviceActions": {
         "ingress": "StartDebugging",
-        "rabbit": "StartWithoutDebugging",
         "redis": "StartWithoutDebugging",
+        "redisinsight":  "StartWithoutDebugging",
         "worker": "StartDebugging"
       }
     }

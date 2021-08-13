@@ -6,9 +6,7 @@ namespace Ingress.Interfaces
 {
     interface ITwitterClient
     {
-        event EventHandler<string> OnTweet;
-
-        Task ConnectAsync(Uri uri, CancellationToken cancellationToken);
+        Task StartAsync(Uri uri, Func<string, Task> OnTweet, CancellationToken cancellationToken);
 
         void Drop();
     }
