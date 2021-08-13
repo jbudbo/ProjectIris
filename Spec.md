@@ -2,14 +2,14 @@ The Twitter API provides a [stream endpoint](https://developer.twitter.com/en/do
 
 The Twitter API v2 sampled stream endpoint provides a random sample of approximately 1% of the full tweet stream. Your app should consume this sample stream and keep track of the following:
 
-Total number of tweets received 
-Average tweets per hour/minute/second
-Top emojis in tweets*
-Percent of tweets that contains emojis
-Top hashtags
-Percent of tweets that contain a url
-Percent of tweets that contain a photo url (pic.twitter.com or Instagram)
-Top domains of urls in tweets
+1. Total number of tweets received 
+2. Average tweets per hour/minute/second
+3. Top emojis in tweets*
+4. Percent of tweets that contains emojis
+5. Top hashtags
+6. Percent of tweets that contain a url
+7. Percent of tweets that contain a photo url (pic.twitter.com or Instagram)
+8. Top domains of urls in tweets
 * The [emoji-data](https://github.com/iamcal/emoji-data) project provides a convenient emoji.json file that you can use to determine which emoji unicode characters to look for in the tweet text.
 
 Your app should also provide some way to report these values to a user (periodically log to terminal, return from RESTful web service, etc). If there are other interesting statistics you’d like to collect, that would be great. There is no need to store this data in a database; keeping everything in-memory is fine. That said, you should think about how you would persist data if that was a requirement.
