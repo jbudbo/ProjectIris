@@ -3,13 +3,12 @@ Working with the Twitter API
 
 ## 30k'
 The project will leverage `Docker-Compose` as an orchestration provider, 
-[RabbitMQ](https://www.rabbitmq.com/ "RabbitMQ") as a Queue provider, and 
-[Redis](https://redis.io/ "Redis") as our data persistance layer as data longevity is not the current goal for this project. We'll be managing the following containers:
-1. RabbitMQ 
-2. Redis
-3. Normalization .Net Core Worker(s)
-4. Ingress .Net Core 
-5. Asp.Net Core Web App
+[Redis](https://redis.io/ "Redis") as our Queue provider and data persistance layer as data longevity is not the current goal for this project. 
+We'll be managing the following containers:
+1. Redis
+2. Normalization .Net Core Worker(s)
+3. Ingress .Net Core 
+4. Asp.Net Core Web App
 
 ## The Back End
 ![Activity](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/Flow.puml "Activity")
