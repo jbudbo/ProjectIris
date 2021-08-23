@@ -1,10 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
-using System;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Worker
 {
@@ -35,7 +31,7 @@ namespace Worker
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("Tweet worker coming up");
+            logger.Startup();
 
             IDatabase db = redis.GetDatabase();
 
@@ -43,14 +39,16 @@ namespace Worker
             {
                 var tweet = await db.ListLeftPopAsync("tweets");
 
-                logger.LogInformation("Tweet Received: {0}", tweet);
+                if (!tweet.HasValue)
+                    continue;
+
+                logger.TweetReceived(tweet);
             }
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("Tweet worker going down");
-
+            logger.Shutdown();
 
             return Task.CompletedTask;
         }

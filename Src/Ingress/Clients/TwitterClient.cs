@@ -1,14 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using System.Text;
 using Microsoft.Extensions.Logging;
 
 namespace Ingress.Clients
 {
     using Interfaces;
-    using System.Threading;
 
     internal sealed class TwitterClient : ITwitterClient
     {
@@ -23,7 +18,7 @@ namespace Ingress.Clients
 
         public async Task StartAsync(Uri uri, Func<string, Task> OnTweet, CancellationToken cancellationToken)
         {
-            logger.LogInformation($"Connecting to {uri}");
+            logger.Connecting(uri);
             await using Stream s = await baseClient.GetStreamAsync(uri, cancellationToken);
             await using BufferedStream bs = new (s);
             using StreamReader streamReader = new (bs, Encoding.UTF8);

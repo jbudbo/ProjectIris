@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Ingress
 {
@@ -31,13 +29,13 @@ namespace Ingress
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("Ingress worker coming up");
+            logger.Startup();
 
             IDatabase db = redis.GetDatabase();
 
             Task onTweet(string tweet)
             {
-                logger.LogInformation("Tweeting: {0}", tweet);
+                logger.TweetReceived(tweet);
 
                 //  Don't even bother serializing that way we can hoover as much data as possible
                 return db.ListLeftPushAsync("tweets", tweet);
@@ -48,7 +46,7 @@ namespace Ingress
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("Ingress worker going down");
+            logger.Shutdown();
 
             client.Drop();
 
