@@ -5,14 +5,14 @@ as a .NET Core or .NET Framework project, but otherwise feel free to use any lib
 The Twitter API v2 sampled stream endpoint provides a random sample of approximately 1% of the full tweet stream. 
 Your app should consume this sample stream and keep track of the following:
 
-. Total number of tweets received 
-. Average tweets per hour/minute/second
-. Top emojis in tweets*
-. Percent of tweets that contains emojis
-. Top hashtags
-. Percent of tweets that contain a url
-. Percent of tweets that contain a photo url (pic.twitter.com or Instagram)
-. Top domains of urls in tweets
+- Total number of tweets received 
+- Average tweets per hour/minute/second
+- Top emojis in tweets*
+- Percent of tweets that contains emojis
+- Top hashtags
+- Percent of tweets that contain a url
+- Percent of tweets that contain a photo url (pic.twitter.com or Instagram)
+- Top domains of urls in tweets
 * The [emoji-data](https://github.com/iamcal/emoji-data) project provides a convenient emoji.json file that you can use to determine which emoji unicode characters to look for in the 
 tweet text.
 
