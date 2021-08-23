@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using System.Text;
+using System.Text.Json;
 
 namespace Worker
 {
@@ -37,12 +39,15 @@ namespace Worker
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var tweet = await db.ListLeftPopAsync("tweets");
+                var rawTweet = await db.ListLeftPopAsync("tweets");
 
-                if (!tweet.HasValue)
+                if (!rawTweet.HasValue)
                     continue;
 
-                logger.TweetReceived(tweet);
+                logger.TweetReceived(rawTweet);
+
+                using MemoryStream buff = new(Encoding.UTF8.GetBytes(rawTweet));
+                Tweet tweet = await JsonSerializer.DeserializeAsync<Tweet>(buff, cancellationToken: cancellationToken);
             }
         }
 
