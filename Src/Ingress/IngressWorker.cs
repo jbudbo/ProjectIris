@@ -1,12 +1,13 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using StackExchange.Redis;
 
 namespace Ingress
 {
     using Interfaces;
     using Models;
-    using StackExchange.Redis;
+    
 
     internal class IngressWorker : IHostedService
     {

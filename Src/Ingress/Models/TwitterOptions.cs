@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Ingress.Models
+﻿namespace Ingress.Models
 {
     internal sealed class TwitterOptions
     {
