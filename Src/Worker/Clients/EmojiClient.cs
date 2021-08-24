@@ -19,8 +19,10 @@ namespace Worker.Clients
 
         public async Task<EmojiData[]> DownloadEmojisAsync(CancellationToken cancellationToken)
         {
-            await using Stream s = await baseClient.GetStreamAsync("/npm/emoji-datasource-twitter/emoji.json", cancellationToken);
-            return await JsonSerializer.DeserializeAsync<EmojiData[]>(s, cancellationToken: cancellationToken);
+            await using Stream s = await baseClient.GetStreamAsync("/npm/emoji-datasource-twitter/emoji.json", cancellationToken)
+                .ConfigureAwait(false);
+            return await JsonSerializer.DeserializeAsync<EmojiData[]>(s, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }

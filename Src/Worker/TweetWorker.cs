@@ -8,7 +8,6 @@ namespace Worker
 {
     using Interfaces;
     using Models;
-    using System;
 
     internal sealed class TweetWorker : IHostedService
     {
@@ -32,13 +31,15 @@ namespace Worker
         {
             logger.Startup();
 
-            await LoadEmojiDataAsync(cancellationToken);
+            await LoadEmojiDataAsync(cancellationToken)
+                .ConfigureAwait(false);
 
             IDatabase db = redis.GetDatabase();
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                RedisValue rawTweet = await db.ListLeftPopAsync("tweets");
+                RedisValue rawTweet = await db.ListLeftPopAsync("tweets")
+                .ConfigureAwait(false);
 
                 if (!rawTweet.HasValue)
                     continue;
@@ -47,8 +48,100 @@ namespace Worker
 
                 using MemoryStream buff = new(Encoding.UTF8.GetBytes(rawTweet));
 
-                Tweet tweet = await JsonSerializer.DeserializeAsync<Tweet>(buff, cancellationToken: cancellationToken);
+                Tweet tweet = await JsonSerializer.DeserializeAsync<Tweet>(buff, cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
 
+                var entities = tweet.data.entities;
+
+                ITransaction trans = db.CreateTransaction();
+
+                await AggHashTagsAsync(trans, entities.hashtags)
+                    .ConfigureAwait(false);
+
+                await AggUrlsAsync(trans, entities.urls)
+                    .ConfigureAwait(false);
+
+                await AggAnnotationsAsync(trans, entities.annotations)
+                    .ConfigureAwait(false);
+
+                await AggMentionsAsync(trans, entities.mentions)
+                    .ConfigureAwait(false);
+
+                await AggEmojiAsync(trans, tweet.data.text)
+                    .ConfigureAwait(false);
+
+                await trans.ExecuteAsync(CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        private async Task AggEmojiAsync(ITransaction trans, string text)
+        {
+            await trans.StringIncrementAsync("emojiCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
+
+        }
+
+        private static async Task AggHashTagsAsync(ITransaction trans, HashtagEntity[] hashtags)
+        {
+            if (hashtags is null || hashtags.Length is 0)
+                return;
+
+            await trans.StringIncrementAsync("hashTagCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
+            for (int i = 0, j = hashtags.Length; i < j; i++)
+            {
+                await trans.HashIncrementAsync("hashtags", hashtags[i].tag, flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        private static async Task AggUrlsAsync(ITransaction trans, UrlEntity[] urls)
+        {
+            if (urls is null || urls.Length is 0)
+                return;
+
+            await trans.StringIncrementAsync("urlCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
+            for (int i = 0, j = urls.Length; i < j; i++)
+            {
+                Uri uri = urls[i].expanded_url;
+
+                await trans.HashIncrementAsync("domains", uri.Host, flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        private static async Task AggAnnotationsAsync(ITransaction trans, AnnotationEntity[] annotations)
+        {
+            if (annotations is null || annotations.Length is 0)
+                return;
+
+            await trans.StringIncrementAsync("annotationCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
+            for (int i = 0, j = annotations.Length; i < j; i++)
+            {
+                await trans.HashIncrementAsync("annotations", annotations[i].normalized_text, flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        private static async Task AggMentionsAsync(ITransaction trans, MentionEntity[] mentions)
+        {
+            if (mentions is null || mentions.Length is 0)
+                return;
+
+            await trans.StringIncrementAsync("mentionCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
+            for (int i = 0, j = mentions.Length; i < j; i++)
+            {
+                await trans.HashIncrementAsync("mentions", mentions[i].username, flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
             }
         }
 
@@ -56,7 +149,8 @@ namespace Worker
         {
             logger.LoadEmojiData();
 
-            emojiCache = await client.DownloadEmojisAsync(cancellationToken);
+            emojiCache = await client.DownloadEmojisAsync(cancellationToken)
+                .ConfigureAwait(false);
 
             logger.EmojisLoaded(emojiCache.Length);
         }

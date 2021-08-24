@@ -33,17 +33,25 @@ namespace Ingress
 
             IDatabase db = redis.GetDatabase();
 
-            async Task onTweet(string tweet)
+            //  Mark the time of our first tweet so we can calculate rolling averages 
+            await db.StringSetAsync("tweetStart", DateTime.UtcNow.Ticks, flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
+            async Task onTweetAsync(string tweet)
             {
                 logger.TweetReceived(tweet);
 
-                await db.StringIncrementAsync("tweetCount", flags: CommandFlags.FireAndForget);
+                //  Increment our tweet count so that we can determine input performance as needed
+                await db.StringIncrementAsync("tweetCount", flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
 
                 //  Don't even bother serializing that way we can hoover as much data as possible
-                await db.ListLeftPushAsync("tweets", tweet, flags: CommandFlags.FireAndForget);
+                await db.ListLeftPushAsync("tweets", tweet, flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
             }
 
-            await client.StartAsync(options.Value.ApiUrl, onTweet, cancellationToken);
+            await client.StartAsync(options.Value.ApiUrl, onTweetAsync, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
