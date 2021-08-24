@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ingress.Support
@@ -13,7 +12,7 @@ namespace Ingress.Support
             , IConfiguration config)
         {
             services.AddHttpClient<ITwitterClient, TwitterClient>()
-                .ConfigureHttpClient((sp, client) =>
+                .ConfigureHttpClient((_, client) =>
                 {
                     client.BaseAddress = new Uri("https://api.twitter.com");
                     client.DefaultRequestHeaders.Authorization = new("Bearer", config["IRIS_TWITTER_BEARER"]);

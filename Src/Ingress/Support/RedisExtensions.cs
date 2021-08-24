@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
+using System.Net;
 
-namespace Worker.Support
+namespace Ingress.Support
 {
     internal static class RedisExtensions
     {

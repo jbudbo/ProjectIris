@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using RabbitMQ.Client;
-using System.Threading.Tasks;
 
 namespace Ingress
 {
@@ -33,7 +31,8 @@ namespace Ingress
                 if (hbc.HostingEnvironment.IsDevelopment())
                     cfg.AddUserSecrets<Program>();
 
-                cfg.AddEnvironmentVariables("IRIS_");
+                cfg.AddJsonFile("twitter.json", true)
+                    .AddEnvironmentVariables("IRIS_");
             })
             .ConfigureServices((hbc, services) =>
             {
@@ -43,7 +42,7 @@ namespace Ingress
                         o.SetApiUrl(hbc.Configuration["IRIS_TWITTER_ENDPOINT"]);
                     })
                     .AddHostedService<IngressWorker>()
-                    .AddSingleton<IConnectionFactory, ConnectionFactory>()
+                    .AddRedis()
                     .AddTwitterClient(hbc.Configuration);
             });
     }

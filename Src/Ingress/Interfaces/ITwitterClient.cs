@@ -1,14 +1,8 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Ingress.Interfaces
+﻿namespace Ingress.Interfaces
 {
     interface ITwitterClient
     {
-        event EventHandler<string> OnTweet;
-
-        Task ConnectAsync(Uri uri, CancellationToken cancellationToken);
+        Task StartAsync(Uri uri, Func<string, Task> OnTweet, CancellationToken cancellationToken = default);
 
         void Drop();
     }

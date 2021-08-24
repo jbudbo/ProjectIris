@@ -1,120 +1,174 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
-using RabbitMQ.Client.Exceptions;
 using StackExchange.Redis;
-using System;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Worker
 {
+    using Interfaces;
+    using Models;
+
     internal sealed class TweetWorker : IHostedService
     {
         private readonly ILogger<TweetWorker> logger;
-        private readonly IConnectionFactory connectionFactory;
+        private readonly IEmojiClient client;
         private readonly IConnectionMultiplexer redis;
-        private IDatabase db;
-        private IConnection connection;
-        private IModel channel;
-        private EventingBasicConsumer consumer;
+
+        private EmojiMasterList emojiCache;
 
         public TweetWorker(
             ILogger<TweetWorker> logger,
-            IConnectionFactory connectionFactory,
+            IEmojiClient client,
             IConnectionMultiplexer redis)
         {
             this.logger = logger;
-            this.connectionFactory = connectionFactory;
+            this.client = client;
             this.redis = redis;
-        }
-
-        private static bool TryConnectToRabbit(IConnectionFactory factory, out IConnection connection)
-        {
-            try
-            {
-                connection = factory.CreateConnection(new[] { "rabbit", "localhost" }, Environment.MachineName);
-                return true;
-            }
-            catch (BrokerUnreachableException)
-            {
-                connection = null;
-                return false;
-            }
-        }
-
-        private static bool TryConnectToRedis(IConnectionMultiplexer redis, out IDatabase db)
-        {
-            try
-            {
-                db = redis.GetDatabase();
-                return true;
-            }
-            catch (Exception)
-            {
-                db = null;
-                return false;
-            }
-        }
-
-        private void TweetReceived(object sender, BasicDeliverEventArgs e)
-        {
-            Utf8JsonReader utf8JsonReader = new Utf8JsonReader(e.Body.Span);
-
-            Tweet x = JsonSerializer.Deserialize<Tweet>(ref utf8JsonReader);
-
-            logger.LogInformation("Tweet {0} received: {1}", x.data.id, x.data.text);
-
-            if (!db.StringSet(x.data.id, x.data.text))
-                logger.LogWarning("Unable to persist tweet");
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("Tweet worker coming up");
+            logger.Startup();
 
-            for (int attempts = 1, max = 7; attempts <= max; attempts++)
+            await LoadEmojiDataAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            IDatabase db = redis.GetDatabase();
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                if (TryConnectToRedis(redis, out db))
-                {
-                    break;
-                }
-                logger.LogInformation($"Was unable to reach reddis, will try again in {1000 * attempts} milliseconds");
-                await Task.Delay(1000 * attempts, cancellationToken);
-            }
+                RedisValue rawTweet = await db.ListLeftPopAsync("tweets")
+                .ConfigureAwait(false);
 
-            for (int attempts = 1, max = 7; attempts <= max; attempts++)
-            {
-                if (TryConnectToRabbit(connectionFactory, out connection))
-                {
-                    channel = connection.CreateModel();
-                    channel.QueueDeclare("Twitter", true, false, true);
+                if (!rawTweet.HasValue)
+                    continue;
 
-                    consumer = new EventingBasicConsumer(channel);
-                    consumer.Received += TweetReceived;
-                    channel.BasicConsume("Twitter", true, consumer);
+                logger.TweetReceived(rawTweet);
+
+                using MemoryStream buff = new(Encoding.UTF8.GetBytes(rawTweet));
+
+                Tweet tweet = await JsonSerializer.DeserializeAsync<Tweet>(buff, cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (tweet.data is null) //  Something went wrong with our tweet stream
+                {
+                    logger.LogError("Woops");
                     return;
                 }
-                logger.LogInformation($"Was unable to reach RabbitMQ, will try again in {1000 * attempts} milliseconds");
-                await Task.Delay(1000 * attempts, cancellationToken);
+
+                var entities = tweet.data.entities;
+
+                ITransaction trans = db.CreateTransaction();
+
+                Task tEmoji = AggEmojiAsync(trans, tweet.data.text);
+
+                await AggHashTagsAsync(trans, entities.hashtags)
+                    .ConfigureAwait(false);
+
+                await AggUrlsAsync(trans, entities.urls)
+                    .ConfigureAwait(false);
+
+                await AggAnnotationsAsync(trans, entities.annotations)
+                    .ConfigureAwait(false);
+
+                await AggMentionsAsync(trans, entities.mentions)
+                    .ConfigureAwait(false);
+                
+                await tEmoji.ConfigureAwait(false);
+
+                await trans.ExecuteAsync(CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
             }
+        }
+
+        private async Task AggEmojiAsync(ITransaction trans, string text)
+        {
+            await trans.StringIncrementAsync("emojiCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
+            foreach (var emoji in emojiCache.ContainsEmojis(text))
+            {
+                await trans.HashIncrementAsync("emojis", emoji, flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        private static async Task AggHashTagsAsync(ITransaction trans, HashtagEntity[] hashtags)
+        {
+            if (hashtags is null || hashtags.Length is 0)
+                return;
+
+            await trans.StringIncrementAsync("hashTagCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
+            for (int i = 0, j = hashtags.Length; i < j; i++)
+            {
+                await trans.HashIncrementAsync("hashtags", hashtags[i].tag, flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        private static async Task AggUrlsAsync(ITransaction trans, UrlEntity[] urls)
+        {
+            if (urls is null || urls.Length is 0)
+                return;
+
+            await trans.StringIncrementAsync("urlCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
+            for (int i = 0, j = urls.Length; i < j; i++)
+            {
+                Uri uri = urls[i].expanded_url;
+
+                await trans.HashIncrementAsync("domains", uri.Host, flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        private static async Task AggAnnotationsAsync(ITransaction trans, AnnotationEntity[] annotations)
+        {
+            if (annotations is null || annotations.Length is 0)
+                return;
+
+            await trans.StringIncrementAsync("annotationCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
+            for (int i = 0, j = annotations.Length; i < j; i++)
+            {
+                await trans.HashIncrementAsync("annotations", annotations[i].normalized_text, flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        private static async Task AggMentionsAsync(ITransaction trans, MentionEntity[] mentions)
+        {
+            if (mentions is null || mentions.Length is 0)
+                return;
+
+            await trans.StringIncrementAsync("mentionCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
+            for (int i = 0, j = mentions.Length; i < j; i++)
+            {
+                await trans.HashIncrementAsync("mentions", mentions[i].username, flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        private async Task LoadEmojiDataAsync(CancellationToken cancellationToken)
+        {
+            logger.LoadEmojiData();
+
+            emojiCache = await client.DownloadEmojisAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            logger.EmojisLoaded(emojiCache.Count);
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("Tweet worker going down");
-
-            consumer.Received -= TweetReceived;
-
-            channel.Close();
-            channel.Dispose();
-
-            connection.Close();
-            connection.Dispose();
+            logger.Shutdown();
 
             return Task.CompletedTask;
         }

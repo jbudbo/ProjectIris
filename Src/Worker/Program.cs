@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using RabbitMQ.Client;
 using System.Threading.Tasks;
 
 namespace Worker
@@ -34,10 +33,10 @@ namespace Worker
 
                 cfg.AddEnvironmentVariables("IRIS_");
             })
-            .ConfigureServices((_, services) =>
+            .ConfigureServices((hbc, services) =>
             {
                 services.AddHostedService<TweetWorker>()
-                    .AddSingleton<IConnectionFactory, ConnectionFactory>()
+                    .AddEmojiClient(hbc.Configuration)
                     .AddRedis();
             });
     }

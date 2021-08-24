@@ -1,14 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using System.Text;
 using Microsoft.Extensions.Logging;
 
 namespace Ingress.Clients
 {
     using Interfaces;
-    using System.Threading;
 
     internal sealed class TwitterClient : ITwitterClient
     {
@@ -21,18 +16,40 @@ namespace Ingress.Clients
             baseClient = httpClient;
         }
 
-        public event EventHandler<string> OnTweet;
-
-        public async Task ConnectAsync(Uri uri, CancellationToken cancellationToken)
+        public async Task StartAsync(Uri uri, Func<string, Task> OnTweet, CancellationToken cancellationToken)
         {
-            logger.LogInformation($"Connecting to {uri}");
-            await using Stream s = await baseClient.GetStreamAsync(uri, cancellationToken);
+            logger.Connecting(uri);
+
+            UriBuilder builder = new("https://api.twitter.com")
+            {
+                Path = uri.OriginalString,
+                //  I'd really like to refactor this into a builder so that I can add/remove these choices via other means
+                Query = "tweet.fields=entities&media.fields=type,url"
+            };
+
+            using HttpResponseMessage response = await baseClient.GetAsync(builder.Uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                .ConfigureAwait(false);
+
+            string rateLimit = response.Headers.TryGetValues("x-rate-limit-limit", out var limit) ? limit.FirstOrDefault() : null;
+            string rateLimitRemaining = response.Headers.TryGetValues("x-rate-limit-remaining", out var remaining) ? remaining.FirstOrDefault() : null;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                switch (response.StatusCode)
+                {
+                    case System.Net.HttpStatusCode.TooManyRequests:
+                        //  This would be our opportunity to try again 
+                        break;
+                }
+            }
+            await using Stream s = await response.Content.ReadAsStreamAsync(cancellationToken)
+                .ConfigureAwait(false);
             await using BufferedStream bs = new (s);
             using StreamReader streamReader = new (bs, Encoding.UTF8);
 
             while (!cancellationToken.IsCancellationRequested && !streamReader.EndOfStream)
             {
-                OnTweet(this, await streamReader.ReadLineAsync());
+                await OnTweet(await streamReader.ReadLineAsync().ConfigureAwait(false));
             }
         }
 
