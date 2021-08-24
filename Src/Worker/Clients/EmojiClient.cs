@@ -17,12 +17,15 @@ namespace Worker.Clients
             baseClient = httpClient;
         }
 
-        public async Task<EmojiData[]> DownloadEmojisAsync(CancellationToken cancellationToken)
+        public async Task<EmojiMasterList> DownloadEmojisAsync(CancellationToken cancellationToken)
         {
             await using Stream s = await baseClient.GetStreamAsync("/npm/emoji-datasource-twitter/emoji.json", cancellationToken)
                 .ConfigureAwait(false);
-            return await JsonSerializer.DeserializeAsync<EmojiData[]>(s, cancellationToken: cancellationToken)
+
+            var emojiData = await JsonSerializer.DeserializeAsync<EmojiData[]>(s, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
+
+            return new EmojiMasterList(emojiData);
         }
     }
 }

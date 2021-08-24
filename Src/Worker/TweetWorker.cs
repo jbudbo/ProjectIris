@@ -15,7 +15,7 @@ namespace Worker
         private readonly IEmojiClient client;
         private readonly IConnectionMultiplexer redis;
 
-        private EmojiData[] emojiCache;
+        private EmojiMasterList emojiCache;
 
         public TweetWorker(
             ILogger<TweetWorker> logger,
@@ -152,7 +152,7 @@ namespace Worker
             emojiCache = await client.DownloadEmojisAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            logger.EmojisLoaded(emojiCache.Length);
+            logger.EmojisLoaded(emojiCache.Count);
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

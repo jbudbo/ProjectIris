@@ -7,6 +7,6 @@ namespace Worker.Interfaces
 
     internal interface IEmojiClient
     {
-        Task<EmojiData[]> DownloadEmojisAsync(CancellationToken cancellationToken = default);
+        Task<EmojiMasterList> DownloadEmojisAsync(CancellationToken cancellationToken = default);
     }
 }
