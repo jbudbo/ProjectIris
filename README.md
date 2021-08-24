@@ -19,4 +19,9 @@ Tweet data will continuously be received via stream by a consumption worker that
 When a new Tweet is queued, a side-car Worker will receive the tweet and process the data into our format before persisting to Redis. 
 > This stage will provide us scalability as if we ever fall behind Twitter and our Queue grows too large, we'll have the ability to introduce additional workers to catch us up
 
+We'll provide statistics on our Redis cachie using 
+[Redis Insight](https://redis.com/redis-enterprise/redis-insight/)
+which will be made available locally at
+[localhost:8091](http://localhost:8091)
+
 Finally, any users actively viewing the metric dashboard will receive an updated set of metric data via [Server Sent Event](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events "MDN SSE")
