@@ -20,16 +20,25 @@ namespace Worker.Models
             }
         }
 
-        public int Count => ((IReadOnlyCollection<string>)emojis).Count;
+        public IEnumerable<string> ContainsEmojis(string text)
+        {
+            foreach (var emoji in emojis)
+            {
+                if (text.Contains(emoji.Key))
+                    yield return emoji.Value;
+            }
+        }
+
+        public int Count => emojis.Count;
 
         public IEnumerator<string> GetEnumerator()
         {
-            return ((IEnumerable<string>)emojis).GetEnumerator();
+            return ((IEnumerable<string>)emojis.Keys).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable)emojis).GetEnumerator();
+            return ((IEnumerable)emojis.Keys).GetEnumerator();
         }
     }
 }

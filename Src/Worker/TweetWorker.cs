@@ -51,9 +51,17 @@ namespace Worker
                 Tweet tweet = await JsonSerializer.DeserializeAsync<Tweet>(buff, cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
 
+                if (tweet.data is null) //  Something went wrong with our tweet stream
+                {
+                    logger.LogError("Woops");
+                    return;
+                }
+
                 var entities = tweet.data.entities;
 
                 ITransaction trans = db.CreateTransaction();
+
+                Task tEmoji = AggEmojiAsync(trans, tweet.data.text);
 
                 await AggHashTagsAsync(trans, entities.hashtags)
                     .ConfigureAwait(false);
@@ -66,9 +74,8 @@ namespace Worker
 
                 await AggMentionsAsync(trans, entities.mentions)
                     .ConfigureAwait(false);
-
-                await AggEmojiAsync(trans, tweet.data.text)
-                    .ConfigureAwait(false);
+                
+                await tEmoji.ConfigureAwait(false);
 
                 await trans.ExecuteAsync(CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
@@ -80,7 +87,11 @@ namespace Worker
             await trans.StringIncrementAsync("emojiCount", flags: CommandFlags.FireAndForget)
                 .ConfigureAwait(false);
 
-
+            foreach (var emoji in emojiCache.ContainsEmojis(text))
+            {
+                await trans.HashIncrementAsync("emojis", emoji, flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+            }
         }
 
         private static async Task AggHashTagsAsync(ITransaction trans, HashtagEntity[] hashtags)
