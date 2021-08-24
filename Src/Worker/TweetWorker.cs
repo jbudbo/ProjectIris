@@ -6,35 +6,33 @@ using System.Text.Json;
 
 namespace Worker
 {
+    using Interfaces;
+    using Models;
+
     internal sealed class TweetWorker : IHostedService
     {
         private readonly ILogger<TweetWorker> logger;
+        private readonly IEmojiClient client;
         private readonly IConnectionMultiplexer redis;
+
+        private EmojiData[] emojiCache;
 
         public TweetWorker(
             ILogger<TweetWorker> logger,
+            IEmojiClient client,
             IConnectionMultiplexer redis)
         {
             this.logger = logger;
+            this.client = client;
             this.redis = redis;
         }
-
-        //private void TweetReceived(object sender, BasicDeliverEventArgs e)
-        //{
-        //    Utf8JsonReader utf8JsonReader = new Utf8JsonReader(e.Body.Span);
-
-        //    Tweet x = JsonSerializer.Deserialize<Tweet>(ref utf8JsonReader);
-
-        //    logger.LogInformation("Tweet {0} received: {1}", x.data.id, x.data.text);
-
-        //    if (!db.StringSet(x.data.id, x.data.text))
-        //        logger.LogWarning("Unable to persist tweet");
-        //}
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             logger.Startup();
 
+            await LoadEmojiDataAsync(cancellationToken);
+            
             IDatabase db = redis.GetDatabase();
 
             while (!cancellationToken.IsCancellationRequested)
@@ -47,8 +45,20 @@ namespace Worker
                 logger.TweetReceived(rawTweet);
 
                 using MemoryStream buff = new(Encoding.UTF8.GetBytes(rawTweet));
+
                 Tweet tweet = await JsonSerializer.DeserializeAsync<Tweet>(buff, cancellationToken: cancellationToken);
+
+
             }
+        }
+
+        private async Task LoadEmojiDataAsync(CancellationToken cancellationToken)
+        {
+            logger.LoadEmojiData();
+
+            emojiCache = await client.DownloadEmojisAsync(cancellationToken);
+
+            logger.EmojisLoaded(emojiCache.Length);
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

@@ -34,12 +34,14 @@ namespace Ingress
 
             IDatabase db = redis.GetDatabase();
 
-            Task onTweet(string tweet)
+            async Task onTweet(string tweet)
             {
                 logger.TweetReceived(tweet);
 
+                await db.StringIncrementAsync("tweetCount", flags: CommandFlags.FireAndForget);
+
                 //  Don't even bother serializing that way we can hoover as much data as possible
-                return db.ListLeftPushAsync("tweets", tweet);
+                await db.ListLeftPushAsync("tweets", tweet);
             }
 
             await client.StartAsync(options.Value.ApiUrl, onTweet, cancellationToken);

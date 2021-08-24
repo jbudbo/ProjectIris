@@ -7,7 +7,7 @@ namespace Worker.Support
     {
         internal static IServiceCollection AddRedis(this IServiceCollection services)
         {
-            var multiplexer = ConnectionMultiplexer.Connect("redis");
+            var multiplexer = ConnectionMultiplexer.Connect("redis,localhost");
 
             return services.AddSingleton<IConnectionMultiplexer>(multiplexer);
         }

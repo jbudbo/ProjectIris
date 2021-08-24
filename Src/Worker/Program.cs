@@ -33,9 +33,10 @@ namespace Worker
 
                 cfg.AddEnvironmentVariables("IRIS_");
             })
-            .ConfigureServices((_, services) =>
+            .ConfigureServices((hbc, services) =>
             {
                 services.AddHostedService<TweetWorker>()
+                    .AddEmojiClient(hbc.Configuration)
                     .AddRedis();
             });
     }

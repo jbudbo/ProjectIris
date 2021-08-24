@@ -1,4 +1,4 @@
-﻿namespace Worker
+﻿namespace Worker.Models
 {
     internal sealed record Tweet(TweetData data);
     internal sealed record TweetData(string id, string text, TwitterEntity entities);
