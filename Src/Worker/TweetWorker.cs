@@ -8,6 +8,7 @@ namespace Worker
 {
     using Interfaces;
     using Models;
+    using System;
 
     internal sealed class TweetWorker : IHostedService
     {
@@ -32,12 +33,12 @@ namespace Worker
             logger.Startup();
 
             await LoadEmojiDataAsync(cancellationToken);
-            
+
             IDatabase db = redis.GetDatabase();
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var rawTweet = await db.ListLeftPopAsync("tweets");
+                RedisValue rawTweet = await db.ListLeftPopAsync("tweets");
 
                 if (!rawTweet.HasValue)
                     continue;
@@ -47,7 +48,6 @@ namespace Worker
                 using MemoryStream buff = new(Encoding.UTF8.GetBytes(rawTweet));
 
                 Tweet tweet = await JsonSerializer.DeserializeAsync<Tweet>(buff, cancellationToken: cancellationToken);
-
 
             }
         }

@@ -7,7 +7,6 @@ namespace Ingress
 {
     using Interfaces;
     using Models;
-    
 
     internal class IngressWorker : IHostedService
     {
@@ -41,7 +40,7 @@ namespace Ingress
                 await db.StringIncrementAsync("tweetCount", flags: CommandFlags.FireAndForget);
 
                 //  Don't even bother serializing that way we can hoover as much data as possible
-                await db.ListLeftPushAsync("tweets", tweet);
+                await db.ListLeftPushAsync("tweets", tweet, flags: CommandFlags.FireAndForget);
             }
 
             await client.StartAsync(options.Value.ApiUrl, onTweet, cancellationToken);
