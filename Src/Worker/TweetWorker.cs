@@ -74,7 +74,7 @@ namespace Worker
 
                 await AggMentionsAsync(trans, entities.mentions)
                     .ConfigureAwait(false);
-                
+
                 await tEmoji.ConfigureAwait(false);
 
                 await trans.ExecuteAsync(CommandFlags.FireAndForget)
