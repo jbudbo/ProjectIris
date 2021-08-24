@@ -31,7 +31,8 @@ namespace Ingress
                 if (hbc.HostingEnvironment.IsDevelopment())
                     cfg.AddUserSecrets<Program>();
 
-                cfg.AddEnvironmentVariables("IRIS_");
+                cfg.AddJsonFile("twitter.json", true)
+                    .AddEnvironmentVariables("IRIS_");
             })
             .ConfigureServices((hbc, services) =>
             {
