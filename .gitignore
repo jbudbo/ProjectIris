@@ -350,3 +350,4 @@ MigrationBackup/
 .ionide/
 /Src/twitter_bearer.txt
 /Src/twitter.json
+/Src/Ingress/twitter.json
