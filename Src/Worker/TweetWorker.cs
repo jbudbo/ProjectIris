@@ -43,7 +43,7 @@ namespace Worker
             while (!cancellationToken.IsCancellationRequested)
             {
                 RedisValue rawTweet = await db.ListLeftPopAsync("tweets")
-                .ConfigureAwait(false);
+                    .ConfigureAwait(false);
 
                 if (!rawTweet.HasValue)
                     continue;

@@ -38,7 +38,7 @@ namespace Worker
             {
                 services.AddHostedService<TweetWorker>()
                     .AddEmojiClient<JsDeliverClient>(hbc.Configuration)
-                    .AddRedis();
+                    .AddRedis(hbc.Configuration);
             });
     }
 }

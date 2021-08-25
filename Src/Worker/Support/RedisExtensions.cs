@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 
 namespace StackExchange.Redis
 {
+    using Microsoft.Extensions.Configuration;
     using Worker.Models;
 
     /// <summary>
@@ -16,9 +17,10 @@ namespace StackExchange.Redis
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        internal static IServiceCollection AddRedis(this IServiceCollection services)
+        internal static IServiceCollection AddRedis(this IServiceCollection services, IConfiguration config)
         {
-            services.AddOptions<RedisOptions>();
+            services.AddOptions<RedisOptions>()
+                .Configure(o => o.Host = config["REDIS_HOST"]);
 
             return services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
