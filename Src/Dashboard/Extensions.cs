@@ -55,27 +55,46 @@ internal static class Extensions
                     var tTweetCount = transaction.StringGetAsync("tweetCount");
                     var tUrlCount = transaction.StringGetAsync("urlCount");
                     var tEmojiCount = transaction.StringGetAsync("emojiCount");
-                    //var tdomainLeaders = transaction.SortAsync("domains", take: 5, order: Order.Descending);
+                    var tHashtagCount = transaction.StringGetAsync("hashTagCount");
+
                     var tDomainLeaders = transaction.HashGetAllAsync("domains");
+                    var tEmojiLeaders = transaction.HashGetAllAsync("emojis");
+                    var tHashtagLeaders = transaction.HashGetAllAsync("hashtags");
 
                     await transaction.ExecuteAsync();
 
                     var domainLeaders = await tDomainLeaders;
+                    var emojiLeaders = await tEmojiLeaders;
+                    var hashtagLeaders = await tHashtagLeaders;
 
                     double tweetCount = double.TryParse(await tTweetCount, out double tc) ? tc : 0;
                     double urlCount = double.TryParse(await tUrlCount, out double uc) ? uc : 0;
                     double emojiCount = double.TryParse(await tEmojiCount, out double ec) ? ec : 0;
+                    double hashtagCount = double.TryParse(await tHashtagCount, out double hc) ? hc : 0;
 
                     var anon = new {
                         tweetsPerSec = tweetCount / secondsSinceStart.TotalSeconds,
                         tweetsReceived = tweetCount,
                         emojiPerc = (emojiCount / tweetCount) * 100.0,
+                        topEmojis = emojiLeaders
+                            .OrderByDescending(v => v.Value)
+                            .Take(5)
+                            .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
+                            .Select(e => $"{e.Item1} ({e.Item2 / emojiCount * 100.0}%)")
+                            .ToArray(),
                         urlPerc = (urlCount / tweetCount) * 100.0,
                         topDomains = domainLeaders
                             .OrderByDescending(v => v.Value)
                             .Take(5)
                             .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
                             .Select(e => $"{e.Item1} ({e.Item2 / urlCount * 100.0}%)")
+                            .ToArray(),
+                        hashTagPerc = (hashtagCount / tweetCount) * 100.0,
+                        topHashTags = hashtagLeaders
+                            .OrderByDescending(v => v.Value)
+                            .Take(5)
+                            .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
+                            .Select(e => $"{e.Item1} ({e.Item2 / hashtagCount * 100.0}%)")
                             .ToArray()
                     };
 
