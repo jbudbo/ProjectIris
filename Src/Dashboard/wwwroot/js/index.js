@@ -1,4 +1,4 @@
-﻿((d) => {
+﻿window["metrics"] = ((d) => {
     const eTweetsReceived = d.getElementById('tweetsReceived')
         , eTPS = d.getElementById('tps')
         , eEmojiPerc = d.getElementById('emojiPerc')
@@ -32,5 +32,23 @@
 
         const topHashTags = e.data.topHashTags;
         eTopHashtags.innerHTML = `<li>${topHashTags[0]}</li><li>${topHashTags[1]}</li><li>${topHashTags[2]}</li><li>${topHashTags[3]}</li><li>${topHashTags[4]}</li>`;
+    }
+
+    return {
+        dropAddUrl: function () {
+            const t = event.target;
+
+            setTimeout(() => {
+                if (!t) return;
+
+                const href = t.href;
+
+                if (!href) return;
+
+                const loc = new URL(href);
+
+                t.href = loc.origin;
+            }, 0);
+        }
     }
 })(document);

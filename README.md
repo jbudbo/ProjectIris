@@ -24,4 +24,7 @@ We'll provide statistics on our Redis cachie using
 which will be made available locally at
 [localhost:8091](http://localhost:8091)
 
-Finally, any users actively viewing the metric dashboard will receive an updated set of metric data via [Server Sent Event](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events "MDN SSE")
+Finally, any users actively viewing the metric dashboard will receive an updated set of metric data via 
+[Server Sent Event](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events "MDN SSE").
+Said dashboard will be made available when running locally at
+[LocalHost:8080](http://localhost:8080)
