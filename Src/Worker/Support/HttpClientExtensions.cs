@@ -3,18 +3,41 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Worker.Support
 {
-    using Clients;
     using Interfaces;
+    using Models;
 
+    /// <summary>
+    /// Extensions for the <see cref="IServiceCollection"/> interface
+    /// </summary>
     internal static class HttpClientExtensions
     {
-        internal static IServiceCollection AddEmojiClient(this IServiceCollection services, IConfiguration config)
+        /// <summary>
+        /// Adds a given <see cref="IEmojiClient"/> to the service collection
+        /// </summary>
+        /// <typeparam name="TClient">The <see cref="IEmojiClient"/> to add</typeparam>
+        /// <param name="services"></param>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        internal static IServiceCollection AddEmojiClient<TClient>(this IServiceCollection services, IConfiguration config)
+            where TClient : class, IEmojiClient
         {
-            services.AddHttpClient<IEmojiClient, EmojiClient>()
-                .ConfigureHttpClient((_, client) =>
+            services.AddOptions<EmojiClientOptions>();
+
+            services.AddHttpClient<IEmojiClient, TClient>()
+                .ConfigureHttpClient(newClient =>
                 {
-                    client.BaseAddress = new Uri("https://cdn.jsdelivr.net");
+                    string configAddress = config["IRIS_EMOJI_HOST"];
+
+                    if (string.IsNullOrWhiteSpace(configAddress)
+                        || !Uri.IsWellFormedUriString(configAddress, UriKind.Absolute))
+                    {
+                        //  Got no or a bad Uri from config, don't use it
+                        return;
+                    }
+
+                    newClient.BaseAddress = new Uri(configAddress);
                 });
+
             return services;
         }
     }

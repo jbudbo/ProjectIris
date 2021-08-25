@@ -1,10 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Threading.Tasks;
+using StackExchange.Redis;
 
 namespace Worker
 {
+    using Clients;
     using Support;
 
     sealed class Program
@@ -36,7 +37,7 @@ namespace Worker
             .ConfigureServices((hbc, services) =>
             {
                 services.AddHostedService<TweetWorker>()
-                    .AddEmojiClient(hbc.Configuration)
+                    .AddEmojiClient<JsDeliverClient>(hbc.Configuration)
                     .AddRedis();
             });
     }

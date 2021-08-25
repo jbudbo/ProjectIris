@@ -8,8 +8,11 @@ namespace Worker
 {
     using Interfaces;
     using Models;
-    using Worker.Support;
+    using Support;
 
+    /// <summary>
+    /// A worker process for consuming raw Tweet data and depositing metrics around the data
+    /// </summary>
     internal sealed class TweetWorker : IHostedService
     {
         private readonly ILogger<TweetWorker> logger;
@@ -52,9 +55,9 @@ namespace Worker
                 Tweet tweet = await JsonSerializer.DeserializeAsync<Tweet>(buff, cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
 
-                if (tweet.data is null) //  Something went wrong with our tweet stream
+                if (tweet.data is null)
                 {
-                    logger.LogError("Woops");
+                    logger.LogError("Something went wrong with our tweet stream");
                     return;
                 }
 
@@ -76,13 +79,20 @@ namespace Worker
                 await AggMentionsAsync(trans, entities.mentions)
                     .ConfigureAwait(false);
 
-                await tEmoji.ConfigureAwait(false);
+                await tEmoji
+                    .ConfigureAwait(false);
 
                 await trans.ExecuteAsync(CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
             }
         }
 
+        /// <summary>
+        /// Aggregates Emoji data found within a Tweet String
+        /// </summary>
+        /// <param name="trans">The Redis transaction to work against</param>
+        /// <param name="text">The Tweet text to review</param>
+        /// <returns></returns>
         private async Task AggEmojiAsync(ITransaction trans, string text)
         {
             string[] emojis = emojiCache.ContainsEmojis(text).ToArray();
@@ -96,13 +106,19 @@ namespace Worker
             foreach (var emoji in emojis)
             {
                 await trans.StringIncrementAsync("emojiCount", flags: CommandFlags.FireAndForget)
-                .ConfigureAwait(false);
+                    .ConfigureAwait(false);
 
                 await trans.HashIncrementAsync("emojis", emoji, flags: CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
             }
         }
 
+        /// <summary>
+        /// Aggregates HashTag data for a set of Tweet data
+        /// </summary>
+        /// <param name="trans"></param>
+        /// <param name="hashtags"></param>
+        /// <returns></returns>
         private static async Task AggHashTagsAsync(ITransaction trans, HashtagEntity[] hashtags)
         {
             if (hashtags is null || hashtags.Length is 0)
@@ -114,7 +130,7 @@ namespace Worker
             for (int i = 0, j = hashtags.Length; i < j; i++)
             {
                 await trans.StringIncrementAsync("hashTagCount", flags: CommandFlags.FireAndForget)
-                .ConfigureAwait(false);
+                    .ConfigureAwait(false);
 
                 await trans.HashIncrementAsync("hashtags", hashtags[i].tag, flags: CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
@@ -139,7 +155,7 @@ namespace Worker
                 for (int i = 0, j = imageUrls.Length; i < j; i++)
                 {
                     await trans.StringIncrementAsync("imageCount", flags: CommandFlags.FireAndForget)
-                    .ConfigureAwait(false);
+                        .ConfigureAwait(false);
 
                     Uri uri = imageUrls[i].expanded_url;
 
@@ -203,6 +219,11 @@ namespace Worker
             }
         }
 
+        /// <summary>
+        /// Load up our Emoji master list
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         private async Task LoadEmojiDataAsync(CancellationToken cancellationToken)
         {
             logger.LoadEmojiData();

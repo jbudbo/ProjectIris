@@ -3,6 +3,9 @@ using System.Globalization;
 
 namespace Worker.Models
 {
+    /// <summary>
+    /// A clean set of searchable Emoji dat
+    /// </summary>
     internal sealed class EmojiMasterList : IReadOnlyCollection<string>
     {
         private readonly Dictionary<string, string> emojis = new();
@@ -20,6 +23,11 @@ namespace Worker.Models
             }
         }
 
+        /// <summary>
+        /// Returns any Emojis from this master list found in the given Text
+        /// </summary>
+        /// <param name="text">The Text to identify Emojis in</param>
+        /// <returns></returns>
         public IEnumerable<string> ContainsEmojis(string text)
         {
             foreach (var emoji in emojis)
@@ -29,6 +37,9 @@ namespace Worker.Models
             }
         }
 
+        /// <summary>
+        /// How many Emojis are in the list
+        /// </summary>
         public int Count => emojis.Count;
 
         public IEnumerator<string> GetEnumerator()

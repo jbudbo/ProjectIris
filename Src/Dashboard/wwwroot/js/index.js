@@ -59,7 +59,8 @@
         const topMentions = e.data.topMentions;
         let mentionHtml = '';
         for (const tm of topMentions) {
-            mentionHtml += `<li>${tm}</li>`;
+            const parts = tm.split('(');
+            mentionHtml += `<li><a href="https://twitter.com/${parts[0].trim()} target="_blank">${parts[0]}</a> (${parts[1]}</li>`;
         }
         eTopMentions.innerHTML = mentionHtml;
     }
