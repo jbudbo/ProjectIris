@@ -126,9 +126,9 @@ namespace Worker
             if (urls is null || urls.Length is 0)
                 return;
 
-            string[] picHosts = new[] { "pic.twitter.com" };
+            string[] picHosts = new[] { "pic.twitter.com", "www.instagram.com" };
 
-            PicUrlParser p = new PicUrlParser();
+            PicUrlParser p = new ();
 
             UrlEntity[] imageUrls = urls.Where(url => picHosts.Contains(p.GetHost(url.display_url))).ToArray();
             if (imageUrls.Length > 0)

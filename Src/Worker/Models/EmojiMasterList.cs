@@ -25,7 +25,7 @@ namespace Worker.Models
             foreach (var emoji in emojis)
             {
                 if (text.Contains(emoji.Key))
-                    yield return emoji.Value;
+                    yield return $"{emoji.Key} - {emoji.Value}";
             }
         }
 

@@ -8,10 +8,11 @@
         , eTopDomains = d.getElementById('topDomains')
         , eTopPicDomains = d.getElementById('topPicDomains')
         , eTopEmojis = d.getElementById('topEmojis')
-        , eTopHashtags = d.getElementById('topHashTags')
-        , worker = new Worker('js/worker.js');
+        , eTopHashtags = d.getElementById('topHashTags');
+    
+    let worker;
 
-    worker.onmessage = function (e) {
+    function renderMetrics(e) {
         if (!e || !e.data) return;
 
         eTPS.innerText = e.data.tweetsPerSec;
@@ -22,22 +23,70 @@
         eHtPerc.innerText = e.data.hashTagPerc;
 
         const topDomains = e.data.topDomains;
-        eTopDomains.innerHTML = `<li>${topDomains[0]}</li><li>${topDomains[1]}</li><li>${topDomains[2]}</li><li>${topDomains[3]}</li><li>${topDomains[4]}</li>`;
+
+        let domainHtml = '';
+        for (const td of topDomains) {
+            domainHtml += `<li>${td}</li>`;
+        }
+        eTopDomains.innerHTML = domainHtml;
 
         const topPicDomains = e.data.topPicDomains;
-        eTopPicDomains.innerHTML = `<li>${topPicDomains[0]}</li><li>${topPicDomains[1]}</li><li>${topPicDomains[2]}</li><li>${topPicDomains[3]}</li><li>${topPicDomains[4]}</li>`;
+        let picHtml = '';
+        for (const tpd of topPicDomains) {
+            picHtml += `<li>${tpd}</li>`;
+        }
+        eTopPicDomains.innerHTML = picHtml;
 
         const topEmojis = e.data.topEmojis;
-        eTopEmojis.innerHTML = `<li>${topEmojis[0]}</li><li>${topEmojis[1]}</li><li>${topEmojis[2]}</li><li>${topEmojis[3]}</li><li>${topEmojis[4]}</li>`;
+        let emojiHtml = '';
+        for (const te of topEmojis) {
+            emojiHtml += `<li>${te}</li>`;
+        }
+        eTopEmojis.innerHTML = emojiHtml;
 
         const topHashTags = e.data.topHashTags;
-        eTopHashtags.innerHTML = `<li>${topHashTags[0]}</li><li>${topHashTags[1]}</li><li>${topHashTags[2]}</li><li>${topHashTags[3]}</li><li>${topHashTags[4]}</li>`;
+        let htHtml = '';
+        for (const th of topHashTags) {
+            const parts = th.split('(');
+            const u = new URL(parts[0].trim());
+            htHtml += `<li><a href="${u}" target="_blank">${u.search.split('%23')[1]}</a> (${parts[1]}</li>`;
+        }
+        eTopHashtags.innerHTML = htHtml;
     }
 
+    function stopWorker() {
+        if (!worker) return;
+
+        //  Tell our worker to stop it's event stream
+        worker.postMessage('stop');
+        //  Terminate our worker (which should also kill any stream)
+        worker.terminate();
+        //  Clean up the worker
+        worker = null;
+    }
+
+    function startWorker() {
+        //  Setup a new worker
+        worker = new Worker('js/worker.js');
+        //  Rig up our message handler
+        worker.onmessage = renderMetrics;
+        //  Start the firehose
+        worker.postMessage('start');
+    }
+
+    startWorker();
+
     return {
+        toggle: function () {
+            if (worker)
+                stopWorker();
+            else
+                startWorker();
+        },
         dropAddUrl: function () {
             const t = event.target;
 
+            //  Push our link update to the bottom of the event stack so that we don't update our link before we use it
             setTimeout(() => {
                 if (!t) return;
 

@@ -95,6 +95,7 @@ internal static class Extensions
                     var anon = new {
                         tweetsPerSec = tweetCount / secondsSinceStart.TotalSeconds,
                         tweetsReceived = tweetCount,
+
                         emojiPerc = (tweetsWithEmojis / tweetCount) * 100.0,
                         topEmojis = emojiLeaders
                             .OrderByDescending(v => v.Value)
@@ -102,6 +103,7 @@ internal static class Extensions
                             .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
                             .Select(e => $"{e.Item1} ({e.Item2 / emojiCount * 100.0}%)")
                             .ToArray(),
+
                         urlPerc = (tweetsWithUrls / tweetCount) * 100.0,
                         topDomains = domainLeaders
                             .OrderByDescending(v => v.Value)
@@ -109,6 +111,7 @@ internal static class Extensions
                             .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
                             .Select(e => $"{e.Item1} ({e.Item2 / urlCount * 100.0}%)")
                             .ToArray(),
+
                         picPerc = (tweetsWithImages / tweetCount) * 100.0,
                         topPicDomains = picLeaders
                             .OrderByDescending(v => v.Value)
@@ -116,12 +119,13 @@ internal static class Extensions
                             .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
                             .Select(e => $"{e.Item1} ({e.Item2 / picCount * 100.0}%)")
                             .ToArray(),
+
                         hashTagPerc = (tweetsWithHashtags / tweetCount) * 100.0,
                         topHashTags = hashtagLeaders
                             .OrderByDescending(v => v.Value)
                             .Take(5)
                             .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
-                            .Select(e => $"{e.Item1} ({e.Item2 / hashtagCount * 100.0}%)")
+                            .Select(e => $"http://twitter.com/search?q=%23{e.Item1} ({e.Item2 / hashtagCount * 100.0}%)")
                             .ToArray()
                     };
 
