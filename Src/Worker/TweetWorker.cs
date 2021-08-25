@@ -126,7 +126,7 @@ namespace Worker
             if (urls is null || urls.Length is 0)
                 return;
 
-            string[] picHosts = new[] { "pic.twitter.com", "www.instagram.com" };
+            string[] picHosts = new[] { "pic.twitter.com", "instagram.com" };
 
             PicUrlParser p = new ();
 
