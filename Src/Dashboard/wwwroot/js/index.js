@@ -52,7 +52,6 @@
         for (const th of topHashTags) {
             const parts = th.split('(');
             const u = new URL(parts[0].trim());
-            debugger;
             htHtml += `<li><a href="${u}" target="_blank">${u.pathname.split('/')[2]}</a> (${parts[1]}</li>`;
         }
         eTopHashtags.innerHTML = htHtml;
@@ -60,7 +59,7 @@
         const topMentions = e.data.topMentions;
         let mentionHtml = '';
         for (const tm of topMentions) {
-            mentionHtml += `<li>${te}</li>`;
+            mentionHtml += `<li>${tm}</li>`;
         }
         eTopMentions.innerHTML = mentionHtml;
     }
