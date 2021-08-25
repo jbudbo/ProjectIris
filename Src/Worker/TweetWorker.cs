@@ -85,11 +85,19 @@ namespace Worker
 
         private async Task AggEmojiAsync(ITransaction trans, string text)
         {
-            await trans.StringIncrementAsync("emojiCount", flags: CommandFlags.FireAndForget)
+            string[] emojis = emojiCache.ContainsEmojis(text).ToArray();
+
+            if (emojis.Length is 0)
+                return;
+
+            await trans.StringIncrementAsync("tweetsWithEmojis", flags: CommandFlags.FireAndForget)
                 .ConfigureAwait(false);
 
-            foreach (var emoji in emojiCache.ContainsEmojis(text))
+            foreach (var emoji in emojis)
             {
+                await trans.StringIncrementAsync("emojiCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
                 await trans.HashIncrementAsync("emojis", emoji, flags: CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
             }
@@ -100,11 +108,14 @@ namespace Worker
             if (hashtags is null || hashtags.Length is 0)
                 return;
 
-            await trans.StringIncrementAsync("hashTagCount", flags: CommandFlags.FireAndForget)
+            await trans.StringIncrementAsync("tweetsWithHashtags", flags: CommandFlags.FireAndForget)
                 .ConfigureAwait(false);
 
             for (int i = 0, j = hashtags.Length; i < j; i++)
             {
+                await trans.StringIncrementAsync("hashTagCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
                 await trans.HashIncrementAsync("hashtags", hashtags[i].tag, flags: CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
             }
@@ -122,11 +133,14 @@ namespace Worker
             UrlEntity[] imageUrls = urls.Where(url => picHosts.Contains(p.GetHost(url.display_url))).ToArray();
             if (imageUrls.Length > 0)
             {
-                await trans.StringIncrementAsync("imageCount", flags: CommandFlags.FireAndForget)
+                await trans.StringIncrementAsync("tweetsWithImages", flags: CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
 
                 for (int i = 0, j = imageUrls.Length; i < j; i++)
                 {
+                    await trans.StringIncrementAsync("imageCount", flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+
                     Uri uri = imageUrls[i].expanded_url;
 
                     await trans.HashIncrementAsync("picDomains", uri.Host, flags: CommandFlags.FireAndForget)
@@ -137,11 +151,14 @@ namespace Worker
             UrlEntity[] linkUrls = urls.Except(imageUrls).ToArray();
             if (linkUrls.Length > 0)
             {
-                await trans.StringIncrementAsync("urlCount", flags: CommandFlags.FireAndForget)
+                await trans.StringIncrementAsync("tweetsWithUrls", flags: CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
 
                 for (int i = 0, j = linkUrls.Length; i < j; i++)
                 {
+                    await trans.StringIncrementAsync("urlCount", flags: CommandFlags.FireAndForget)
+                        .ConfigureAwait(false);
+
                     Uri uri = linkUrls[i].expanded_url;
 
                     await trans.HashIncrementAsync("domains", uri.Host, flags: CommandFlags.FireAndForget)
@@ -155,11 +172,14 @@ namespace Worker
             if (annotations is null || annotations.Length is 0)
                 return;
 
-            await trans.StringIncrementAsync("annotationCount", flags: CommandFlags.FireAndForget)
+            await trans.StringIncrementAsync("tweetsWithAnnotations", flags: CommandFlags.FireAndForget)
                 .ConfigureAwait(false);
 
             for (int i = 0, j = annotations.Length; i < j; i++)
             {
+                await trans.StringIncrementAsync("annotationCount", flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+
                 await trans.HashIncrementAsync("annotations", annotations[i].normalized_text, flags: CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
             }
@@ -170,11 +190,14 @@ namespace Worker
             if (mentions is null || mentions.Length is 0)
                 return;
 
-            await trans.StringIncrementAsync("mentionCount", flags: CommandFlags.FireAndForget)
+            await trans.StringIncrementAsync("tweetsWithMentions", flags: CommandFlags.FireAndForget)
                 .ConfigureAwait(false);
 
             for (int i = 0, j = mentions.Length; i < j; i++)
             {
+                await trans.StringIncrementAsync("mentionCount", flags: CommandFlags.FireAndForget)
+                .ConfigureAwait(false);
+
                 await trans.HashIncrementAsync("mentions", mentions[i].username, flags: CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
             }

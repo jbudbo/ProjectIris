@@ -53,43 +53,70 @@ internal static class Extensions
                     ITransaction transaction = db.CreateTransaction();
 
                     var tTweetCount = transaction.StringGetAsync("tweetCount");
+
+                    var tTweetsWithUrls = transaction.StringGetAsync("tweetsWithUrls");
                     var tUrlCount = transaction.StringGetAsync("urlCount");
+
+                    var tTweetsWithImages = transaction.StringGetAsync("tweetsWithImages");
+                    var tPicCount = transaction.StringGetAsync("imageCount");
+
+                    var tTweetsWithEmojis = transaction.StringGetAsync("tweetsWithEmojis");
                     var tEmojiCount = transaction.StringGetAsync("emojiCount");
+
+                    var tTweetsWithHashtags= transaction.StringGetAsync("tweetsWithHashtags");
                     var tHashtagCount = transaction.StringGetAsync("hashTagCount");
 
                     var tDomainLeaders = transaction.HashGetAllAsync("domains");
+                    var tPicLeaders = transaction.HashGetAllAsync("picDomains");
                     var tEmojiLeaders = transaction.HashGetAllAsync("emojis");
                     var tHashtagLeaders = transaction.HashGetAllAsync("hashtags");
 
                     await transaction.ExecuteAsync();
 
                     var domainLeaders = await tDomainLeaders;
+                    var picLeaders = await tPicLeaders;
                     var emojiLeaders = await tEmojiLeaders;
                     var hashtagLeaders = await tHashtagLeaders;
 
                     double tweetCount = double.TryParse(await tTweetCount, out double tc) ? tc : 0;
+
+                    double tweetsWithUrls = double.TryParse(await tTweetsWithUrls, out double twu) ? twu : 0;
                     double urlCount = double.TryParse(await tUrlCount, out double uc) ? uc : 0;
+
+                    double tweetsWithImages = double.TryParse(await tTweetsWithImages, out double twi) ? twi : 0;
+                    double picCount = double.TryParse(await tPicCount, out double pc) ? pc : 0;
+
+                    double tweetsWithEmojis = double.TryParse(await tTweetsWithEmojis, out double twe) ? twe : 0;
                     double emojiCount = double.TryParse(await tEmojiCount, out double ec) ? ec : 0;
+
+                    double tweetsWithHashtags = double.TryParse(await tTweetsWithHashtags, out double twh) ? twh : 0;
                     double hashtagCount = double.TryParse(await tHashtagCount, out double hc) ? hc : 0;
 
                     var anon = new {
                         tweetsPerSec = tweetCount / secondsSinceStart.TotalSeconds,
                         tweetsReceived = tweetCount,
-                        emojiPerc = (emojiCount / tweetCount) * 100.0,
+                        emojiPerc = (tweetsWithEmojis / tweetCount) * 100.0,
                         topEmojis = emojiLeaders
                             .OrderByDescending(v => v.Value)
                             .Take(5)
                             .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
                             .Select(e => $"{e.Item1} ({e.Item2 / emojiCount * 100.0}%)")
                             .ToArray(),
-                        urlPerc = (urlCount / tweetCount) * 100.0,
+                        urlPerc = (tweetsWithUrls / tweetCount) * 100.0,
                         topDomains = domainLeaders
                             .OrderByDescending(v => v.Value)
                             .Take(5)
                             .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
                             .Select(e => $"{e.Item1} ({e.Item2 / urlCount * 100.0}%)")
                             .ToArray(),
-                        hashTagPerc = (hashtagCount / tweetCount) * 100.0,
+                        picPerc = (tweetsWithImages / tweetCount) * 100.0,
+                        topPicDomains = picLeaders
+                            .OrderByDescending(v => v.Value)
+                            .Take(5)
+                            .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
+                            .Select(e => $"{e.Item1} ({e.Item2 / picCount * 100.0}%)")
+                            .ToArray(),
+                        hashTagPerc = (tweetsWithHashtags / tweetCount) * 100.0,
                         topHashTags = hashtagLeaders
                             .OrderByDescending(v => v.Value)
                             .Take(5)
