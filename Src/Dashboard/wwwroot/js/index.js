@@ -5,10 +5,12 @@
         , eUrlPerc = d.getElementById('urlPerc')
         , eHtPerc = d.getElementById('htPerc')
         , ePicPerc = d.getElementById('picPerc')
+        , eMentionPerc = d.getElementById('mentionPerc')
         , eTopDomains = d.getElementById('topDomains')
         , eTopPicDomains = d.getElementById('topPicDomains')
         , eTopEmojis = d.getElementById('topEmojis')
-        , eTopHashtags = d.getElementById('topHashTags');
+        , eTopHashtags = d.getElementById('topHashTags')
+        , eTopMentions = d.getElementById('topMentions');
     
     let worker;
 
@@ -21,6 +23,7 @@
         eUrlPerc.innerText = e.data.urlPerc;
         ePicPerc.innerText = e.data.picPerc;
         eHtPerc.innerText = e.data.hashTagPerc;
+        eMentionPerc.innerText = e.data.mentionPerc;
 
         const topDomains = e.data.topDomains;
 
@@ -49,9 +52,17 @@
         for (const th of topHashTags) {
             const parts = th.split('(');
             const u = new URL(parts[0].trim());
-            htHtml += `<li><a href="${u}" target="_blank">${u.search.split('%23')[1]}</a> (${parts[1]}</li>`;
+            debugger;
+            htHtml += `<li><a href="${u}" target="_blank">${u.pathname.split('/')[2]}</a> (${parts[1]}</li>`;
         }
         eTopHashtags.innerHTML = htHtml;
+
+        const topMentions = e.data.topMentions;
+        let mentionHtml = '';
+        for (const tm of topMentions) {
+            mentionHtml += `<li>${te}</li>`;
+        }
+        eTopMentions.innerHTML = mentionHtml;
     }
 
     function stopWorker() {

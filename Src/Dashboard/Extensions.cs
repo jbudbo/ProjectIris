@@ -66,10 +66,14 @@ internal static class Extensions
                     var tTweetsWithHashtags= transaction.StringGetAsync("tweetsWithHashtags");
                     var tHashtagCount = transaction.StringGetAsync("hashTagCount");
 
+                    var tTweetsWithMentions= transaction.StringGetAsync("tweetsWithMentions");
+                    var tMentionCount = transaction.StringGetAsync("mentionCount");
+
                     var tDomainLeaders = transaction.HashGetAllAsync("domains");
                     var tPicLeaders = transaction.HashGetAllAsync("picDomains");
                     var tEmojiLeaders = transaction.HashGetAllAsync("emojis");
                     var tHashtagLeaders = transaction.HashGetAllAsync("hashtags");
+                    var tMentionLeaders = transaction.HashGetAllAsync("mentions");
 
                     await transaction.ExecuteAsync();
 
@@ -77,6 +81,7 @@ internal static class Extensions
                     var picLeaders = await tPicLeaders;
                     var emojiLeaders = await tEmojiLeaders;
                     var hashtagLeaders = await tHashtagLeaders;
+                    var mentionLeaders = await tMentionLeaders;
 
                     double tweetCount = double.TryParse(await tTweetCount, out double tc) ? tc : 0;
 
@@ -91,6 +96,9 @@ internal static class Extensions
 
                     double tweetsWithHashtags = double.TryParse(await tTweetsWithHashtags, out double twh) ? twh : 0;
                     double hashtagCount = double.TryParse(await tHashtagCount, out double hc) ? hc : 0;
+
+                    double tweetsWithMentions = double.TryParse(await tTweetsWithMentions, out double twm) ? twm : 0;
+                    double mentionsCount = double.TryParse(await tMentionCount, out double mc) ? mc : 0;
 
                     var anon = new {
                         tweetsPerSec = tweetCount / secondsSinceStart.TotalSeconds,
@@ -125,7 +133,15 @@ internal static class Extensions
                             .OrderByDescending(v => v.Value)
                             .Take(5)
                             .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
-                            .Select(e => $"http://twitter.com/search?q=%23{e.Item1} ({e.Item2 / hashtagCount * 100.0}%)")
+                            .Select(e => $"http://twitter.com/hashtag/{e.Item1} ({e.Item2 / hashtagCount * 100.0}%)")
+                            .ToArray(),
+
+                        mentionPerc = (tweetsWithMentions / tweetCount) * 100.0,
+                        topMentions = mentionLeaders
+                            .OrderByDescending(v => v.Value)
+                            .Take(5)
+                            .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
+                            .Select(e => $"{e.Item1} ({e.Item2 / picCount * 100.0}%)")
                             .ToArray()
                     };
 
