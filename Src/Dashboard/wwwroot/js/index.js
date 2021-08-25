@@ -3,6 +3,7 @@
         , eTPS = d.getElementById('tps')
         , eEmojiPerc = d.getElementById('emojiPerc')
         , eUrlPerc = d.getElementById('urlPerc')
+        , eTopDomains = d.getElementById('topDomains')
         , worker = new Worker('js/worker.js');
 
     worker.onmessage = function (e) {
@@ -12,5 +13,8 @@
         eTweetsReceived.innerText = e.data.tweetsReceived;
         eEmojiPerc.innerText = e.data.emojiPerc;
         eUrlPerc.innerText = e.data.urlPerc;
+
+        const topDomains = e.data.topDomains.split(',');
+        eTopDomains.innerHTML = `<li>${topDomains[0]}</li><li>${topDomains[1]}</li><li>${topDomains[2]}</li>`;
     }
 })(document);

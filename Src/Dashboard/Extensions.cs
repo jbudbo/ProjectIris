@@ -55,22 +55,26 @@ internal static class Extensions
                     var tTweetCount = transaction.StringGetAsync("tweetCount");
                     var tUrlCount = transaction.StringGetAsync("urlCount");
                     var tEmojiCount = transaction.StringGetAsync("emojiCount");
-                    var tdomainLeaders = transaction.SortAsync("domains", take: 5, order: Order.Descending);
+                    //var tdomainLeaders = transaction.SortAsync("domains", take: 5, order: Order.Descending);
+                    var tDomainLeaders = transaction.HashGetAllAsync("domains");
 
                     await transaction.ExecuteAsync();
 
-                    var domainLeaders = await tdomainLeaders;
+                    var domainLeaders = await tDomainLeaders;
 
-                    double tweetCount = double.Parse(await tTweetCount);
-                    double urlCount = double.Parse(await tUrlCount);
-                    double emojiCount = double.Parse(await tEmojiCount);
+                    double tweetCount = double.TryParse(await tTweetCount, out double tc) ? tc : 0;
+                    double urlCount = double.TryParse(await tUrlCount, out double uc) ? uc : 0;
+                    double emojiCount = double.TryParse(await tEmojiCount, out double ec) ? ec : 0;
 
                     var anon = new {
                         tweetsPerSec = tweetCount / secondsSinceStart.TotalSeconds,
                         tweetsReceived = tweetCount,
                         emojiPerc = (emojiCount / tweetCount) * 100.0,
                         urlPerc = (urlCount / tweetCount) * 100.0,
-                        topDomains = string.Join(',', domainLeaders.Select(v => v.ToString()))
+                        topDomains = string.Join(',', domainLeaders
+                            .OrderByDescending(v => v.Value)
+                            .Take(3)
+                            .Select(v => v.Name))
                     };
 
                     await response!.WriteAsync("data: ", ctxt.RequestAborted);

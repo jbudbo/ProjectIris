@@ -44,8 +44,8 @@ namespace Ingress.Clients
             }
             await using Stream s = await response.Content.ReadAsStreamAsync(cancellationToken)
                 .ConfigureAwait(false);
-            await using BufferedStream bs = new (s);
-            using StreamReader streamReader = new (bs, Encoding.UTF8);
+            //await using BufferedStream bs = new(s);
+            using StreamReader streamReader = new(s, Encoding.UTF8);
 
             while (!cancellationToken.IsCancellationRequested && !streamReader.EndOfStream)
             {
