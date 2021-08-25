@@ -8,6 +8,7 @@ namespace Worker
 {
     using Interfaces;
     using Models;
+    using Worker.Support;
 
     internal sealed class TweetWorker : IHostedService
     {
@@ -114,15 +115,38 @@ namespace Worker
             if (urls is null || urls.Length is 0)
                 return;
 
-            await trans.StringIncrementAsync("urlCount", flags: CommandFlags.FireAndForget)
-                .ConfigureAwait(false);
+            string[] picHosts = new[] { "pic.twitter.com" };
 
-            for (int i = 0, j = urls.Length; i < j; i++)
+            PicUrlParser p = new PicUrlParser();
+
+            UrlEntity[] imageUrls = urls.Where(url => picHosts.Contains(p.GetHost(url.display_url))).ToArray();
+            if (imageUrls.Length > 0)
             {
-                Uri uri = urls[i].expanded_url;
-
-                await trans.HashIncrementAsync("domains", uri.Host, flags: CommandFlags.FireAndForget)
+                await trans.StringIncrementAsync("imageCount", flags: CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
+
+                for (int i = 0, j = imageUrls.Length; i < j; i++)
+                {
+                    Uri uri = imageUrls[i].expanded_url;
+
+                    await trans.HashIncrementAsync("picDomains", uri.Host, flags: CommandFlags.FireAndForget)
+                        .ConfigureAwait(false);
+                }
+            }
+
+            UrlEntity[] linkUrls = urls.Except(imageUrls).ToArray();
+            if (linkUrls.Length > 0)
+            {
+                await trans.StringIncrementAsync("urlCount", flags: CommandFlags.FireAndForget)
+                    .ConfigureAwait(false);
+
+                for (int i = 0, j = linkUrls.Length; i < j; i++)
+                {
+                    Uri uri = linkUrls[i].expanded_url;
+
+                    await trans.HashIncrementAsync("domains", uri.Host, flags: CommandFlags.FireAndForget)
+                        .ConfigureAwait(false);
+                }
             }
         }
 

@@ -14,7 +14,8 @@
         eEmojiPerc.innerText = e.data.emojiPerc;
         eUrlPerc.innerText = e.data.urlPerc;
 
-        const topDomains = e.data.topDomains.split(',');
-        eTopDomains.innerHTML = `<li>${topDomains[0]}</li><li>${topDomains[1]}</li><li>${topDomains[2]}</li>`;
+        const topDomains = e.data.topDomains;
+
+        eTopDomains.innerHTML = `<li>${topDomains[0]}</li><li>${topDomains[1]}</li><li>${topDomains[2]}</li><li>${topDomains[3]}</li><li>${topDomains[4]}</li>`;
     }
 })(document);

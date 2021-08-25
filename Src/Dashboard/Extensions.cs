@@ -71,10 +71,12 @@ internal static class Extensions
                         tweetsReceived = tweetCount,
                         emojiPerc = (emojiCount / tweetCount) * 100.0,
                         urlPerc = (urlCount / tweetCount) * 100.0,
-                        topDomains = string.Join(',', domainLeaders
+                        topDomains = domainLeaders
                             .OrderByDescending(v => v.Value)
-                            .Take(3)
-                            .Select(v => v.Name))
+                            .Take(5)
+                            .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
+                            .Select(e => $"{e.Item1} ({e.Item2 / urlCount * 100.0}%)")
+                            .ToArray()
                     };
 
                     await response!.WriteAsync("data: ", ctxt.RequestAborted);
