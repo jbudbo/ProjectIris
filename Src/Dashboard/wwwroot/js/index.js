@@ -1,7 +1,10 @@
-﻿(() => {
-    const evtSource = new EventSource("/datafeed");
+﻿((d) => {
+    const eTweetsReceived = d.getElementById('tweetsReceived')
+        , worker = new Worker('js/worker.js');
 
-    evtSource.onmessage = function (evt) {
+    worker.onmessage = function (e) {
+        if (!e || !e.data) return;
 
-    };
-})();
+        eTweetsReceived.innerText = e.data.tweetsReceived;
+    }
+})(document);

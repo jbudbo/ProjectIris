@@ -2,14 +2,16 @@
   "profiles": {
     "Docker Compose": {
       "commandName": "DockerCompose",
-      "composeLaunchAction": "None",
-      "composeLaunchServiceName": "worker",
+      "composeLaunchAction": "LaunchBrowser",
+      "composeLaunchServiceName": "dashboard",
+      "composeLaunchUrl": "http://localhost:8080/",
       "commandVersion": "1.0",
       "serviceActions": {
-        "ingress": "StartDebugging",
+        "ingress": "StartWithoutDebugging",
         "redis": "StartWithoutDebugging",
-        "redisinsight":  "StartWithoutDebugging",
-        "worker": "StartDebugging"
+        "redisinsight": "StartWithoutDebugging",
+        "worker": "StartWithoutDebugging",
+        "dashboard": "StartDebugging"
       }
     }
   }

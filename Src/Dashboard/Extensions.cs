@@ -1,4 +1,5 @@
 ﻿using StackExchange.Redis;
+using System.Text.Json;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -26,7 +27,7 @@ internal static class Extensions
 
             string reqPath = ctxt.Request?.Path.Value ?? string.Empty;
 
-            if (reqPath.Equals("/datafeed", StringComparison.InvariantCultureIgnoreCase))
+            if (!reqPath.Equals("/datafeed", StringComparison.InvariantCultureIgnoreCase))
             {
                 await next();
                 return;
@@ -41,8 +42,21 @@ internal static class Extensions
 
                 while(!ctxt.RequestAborted.IsCancellationRequested)
                 {
-                    IBatch dataBatch = db.CreateBatch();
+                    ITransaction transaction = db.CreateTransaction();
 
+                    var tTweetCount = transaction.StringGetAsync("tweetCount");
+
+                    await transaction.ExecuteAsync();
+
+                    var anon = new { tweetsReceived = (await tTweetCount).ToString() };
+
+                    await response!.WriteAsync("data: ", ctxt.RequestAborted);
+
+                    await JsonSerializer.SerializeAsync(response.Body, anon);
+
+                    await response!.WriteAsync("\n\n", ctxt.RequestAborted);
+
+                    await response!.Body!.FlushAsync(ctxt.RequestAborted);
                 }
             }
             catch (TaskCanceledException) { }

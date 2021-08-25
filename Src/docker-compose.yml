@@ -51,6 +51,20 @@ services:
             - Iris
         environment:
             IRIS_TWITTER_ENDPOINT: "/2/tweets/sample/stream"
+
+    dashboard:
+        image: ${DOCKER_REGISTRY-}dashboard
+        build:
+            context: .
+            dockerfile: Dashboard/Dockerfile
+        depends_on:
+            redis:
+                condition: service_healthy
+        ports:
+            - 8080:80
+            - 8443:443
+        networks:
+            - Iris
     
 secrets:
     twitter_bearer:
