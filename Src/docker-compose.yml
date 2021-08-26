@@ -55,6 +55,7 @@ services:
             - Iris
         environment:
             IRIS_TWITTER_ENDPOINT: "/2/tweets/sample/stream"
+            IRIS_REDIS_HOST: "redis"
 
     dashboard:
         image: ${DOCKER_REGISTRY-}dashboard
@@ -67,6 +68,8 @@ services:
         ports:
             - 8080:80
             - 8443:443
+        environment:
+            IRIS_REDIS_HOST: "redis"
         networks:
             - Iris
     

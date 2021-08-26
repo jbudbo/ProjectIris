@@ -1,11 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace StackExchange.Redis
 {
-    using Microsoft.Extensions.Configuration;
-    using Worker.Models;
-
     /// <summary>
     /// Any extension methods for the <see cref="Redis"/> namespace
     /// </summary>

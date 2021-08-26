@@ -1,10 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Worker.Interfaces;
+using Worker.Models;
 
-namespace Worker.Support
+namespace Microsoft.Extensions.DependencyInjection
 {
-    using Interfaces;
-    using Models;
+    using Configuration;
 
     /// <summary>
     /// Extensions for the <see cref="IServiceCollection"/> interface
@@ -26,7 +25,7 @@ namespace Worker.Support
             services.AddHttpClient<IEmojiClient, TClient>()
                 .ConfigureHttpClient(newClient =>
                 {
-                    string configAddress = config["IRIS_EMOJI_HOST"];
+                    string configAddress = config["EMOJI_HOST"];
 
                     if (string.IsNullOrWhiteSpace(configAddress)
                         || !Uri.IsWellFormedUriString(configAddress, UriKind.Absolute))

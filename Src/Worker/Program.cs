@@ -15,7 +15,8 @@ namespace Worker
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
-        static Task Main(string[] args) => CreateHostBuilder(args).Build()
+        private static Task Main(string[] args) => CreateHostBuilder(args)
+            .Build()
             .RunAsync();
 
         /// <summary>
@@ -23,22 +24,35 @@ namespace Worker
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
-        static IHostBuilder CreateHostBuilder(string[] args) => Host.CreateDefaultBuilder(args)
+        private static IHostBuilder CreateHostBuilder(string[] args) => Host
+            .CreateDefaultBuilder(args)
             //  Poke in our NETCORE_ environment variables for later host setup
             .ConfigureHostConfiguration(cfg => cfg.AddEnvironmentVariables("NETCORE_"))
             //  Poke in our IRIS_ configuration points
-            .ConfigureAppConfiguration((hbc, cfg) =>
-            {
-                if (hbc.HostingEnvironment.IsDevelopment())
-                    cfg.AddUserSecrets<Program>();
+            .ConfigureAppConfiguration(SetupConfigurationElements)
+            .ConfigureServices(SetupServices);
 
-                cfg.AddEnvironmentVariables("IRIS_");
-            })
-            .ConfigureServices((hbc, services) =>
-            {
-                services.AddHostedService<TweetWorker>()
-                    .AddEmojiClient<JsDeliverClient>(hbc.Configuration)
-                    .AddRedis(hbc.Configuration);
-            });
+        /// <summary>
+        /// Bootstrap our configuration providers
+        /// </summary>
+        /// <param name="builderContext"></param>
+        /// <param name="configurationBuilder"></param>
+        private static void SetupConfigurationElements(HostBuilderContext builderContext, IConfigurationBuilder configurationBuilder)
+        {
+            if (builderContext.HostingEnvironment.IsDevelopment())
+                configurationBuilder.AddUserSecrets<Program>();
+
+            configurationBuilder.AddEnvironmentVariables("IRIS_");
+        }
+
+        /// <summary>
+        /// Bootstrap all of our services
+        /// </summary>
+        /// <param name="builderContext"></param>
+        /// <param name="services"></param>
+        private static void SetupServices(HostBuilderContext builderContext, IServiceCollection services) => services
+            .AddHostedService<TweetWorker>()
+            .AddEmojiClient<JsDeliverClient>(builderContext.Configuration)
+            .AddRedis(builderContext.Configuration);
     }
 }

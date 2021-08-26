@@ -5,12 +5,6 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 internal static class Extensions
 {
-    public static IServiceCollection AddRedis(this IServiceCollection services)
-    {
-        var multiplexer = ConnectionMultiplexer.Connect("redis,localhost");
-        return services.AddSingleton<IConnectionMultiplexer>(multiplexer);
-    }
-
     public static WebApplication? UseServerSentEvents(this WebApplication? app)
     { 
         app?.Use(async (ctxt, next) =>

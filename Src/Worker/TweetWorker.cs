@@ -226,7 +226,7 @@ namespace Worker
         /// <returns></returns>
         private async Task LoadEmojiDataAsync(CancellationToken cancellationToken)
         {
-            logger.LoadEmojiData();
+            logger.EmojisLoading();
 
             emojiCache = await client.DownloadEmojisAsync(cancellationToken)
                 .ConfigureAwait(false);

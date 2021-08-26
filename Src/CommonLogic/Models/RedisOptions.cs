@@ -1,5 +1,4 @@
-﻿
-namespace Worker.Models
+﻿namespace StackExchange.Redis
 {
     /// <summary>
     /// Any options to be used to configure a Redis service

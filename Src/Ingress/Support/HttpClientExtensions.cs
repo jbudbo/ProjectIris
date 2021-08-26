@@ -1,10 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Ingress.Clients;
+using Ingress.Interfaces;
 
-namespace Ingress.Support
+namespace Microsoft.Extensions.DependencyInjection
 {
-    using Clients;
-    using Interfaces;
+    using Configuration;    
 
     internal static class HttpClientExtensions
     {
@@ -15,7 +14,7 @@ namespace Ingress.Support
                 .ConfigureHttpClient((_, client) =>
                 {
                     client.BaseAddress = new Uri("https://api.twitter.com");
-                    client.DefaultRequestHeaders.Authorization = new("Bearer", config["IRIS_TWITTER_BEARER"]);
+                    client.DefaultRequestHeaders.Authorization = new("Bearer", config["TWITTER_BEARER"]);
                 });
             return services;
         }

@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace Worker.Interfaces
+﻿namespace Worker.Interfaces
 {
     using Models;
 
