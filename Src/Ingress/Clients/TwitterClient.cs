@@ -24,11 +24,15 @@ namespace Ingress.Clients
         {
             logger.Connecting(uri);
 
-            UriBuilder builder = new("https://api.twitter.com")
+            var queryParams = options.Value?.ApiParameters;
+            queryParams["tweet.fields"] ??= "entities";
+            queryParams["media.fields"] ??= "type,url";
+
+
+            UriBuilder builder = new(options.Value?.ApiUrl?.Host ?? "https://api.twitter.com")
             {
                 Path = uri.OriginalString,
-                //  I'd really like to refactor this into a builder so that I can add/remove these choices via other means
-                Query = "tweet.fields=entities&media.fields=type,url"
+                Query =  string.Join('&', queryParams.Select(p => $"{p.Key}={p.Value}"))
             };
 
             using HttpResponseMessage response = await baseClient.GetAsync(builder.Uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken)

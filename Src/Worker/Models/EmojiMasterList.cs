@@ -4,7 +4,7 @@ using System.Globalization;
 namespace Worker.Models
 {
     /// <summary>
-    /// A clean set of searchable Emoji dat
+    /// A clean set of searchable Emoji data
     /// </summary>
     internal sealed class EmojiMasterList : IReadOnlyCollection<string>
     {
