@@ -8,6 +8,6 @@
         /// <summary>
         /// The Host of the Redis server
         /// </summary>
-        public string Host { get; set; }
+        public string? Host { get; set; }
     }
 }

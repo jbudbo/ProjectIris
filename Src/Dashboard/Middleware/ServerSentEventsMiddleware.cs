@@ -1,56 +1,28 @@
 ﻿using StackExchange.Redis;
 using System.Text.Json;
-using Dashboard.Middleware;
 
-namespace Microsoft.Extensions.DependencyInjection;
+namespace Dashboard.Middleware;
 
-internal static class Extensions
+internal sealed class ServerSentEventsMiddleware
 {
-    /// <summary>
-    /// Maps a given route to handling Server Sent Event requests
-    /// </summary>
-    /// <param name="app"></param>
-    /// <param name="path">The application route</param>
-    /// <returns></returns>
-    public static IApplicationBuilder MapServerSentEvents(this IApplicationBuilder app, PathString path)
-        => app?.Map(path, sseApp => sseApp.UseServerSentEvents())!;
+    private readonly RequestDelegate next;
+    private readonly IConnectionMultiplexer redis;
 
-    /// <summary>
-    /// Bootstraps SSE middleware into the request pipeline
-    /// </summary>
-    /// <param name="app"></param>
-    /// <returns></returns>
-    public static IApplicationBuilder UseServerSentEvents(this IApplicationBuilder app)
-        => app?.UseMiddleware<ServerSentEventsMiddleware>()!;
-
-    /// <summary>
-    /// Add a Server Sent Event handler to the pipeline at a given route
-    /// </summary>
-    /// <param name="app"></param>
-    /// <returns></returns>
-    public static WebApplication? UseServerSentEvents2(this WebApplication? app, string route)
+    public ServerSentEventsMiddleware(RequestDelegate next, IConnectionMultiplexer redis)
     {
-        //  If we got no route or a bad route, we're not going to rig anything
-        if (string.IsNullOrWhiteSpace(route))
-            return app;
-
-        app?.Use((c, n) =>
-        {
-            if (c?.Request?.Path.Value is null) return n();
-
-            if (c.Request.Path.Value.Equals(route, StringComparison.InvariantCultureIgnoreCase))
-                return n();
-
-            return RunSseMiddlewareAsync(c);
-        });
-        
-        return app;
+        this.next = next;
+        this.redis = redis;
     }
 
-    public static async Task RunSseMiddlewareAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context)
     {
-        var redis = context.RequestServices.GetRequiredService<IConnectionMultiplexer>();
+        if (context?.Request is null || context.Request.Headers.Accept != "text/event-stream")
+        {
+            await next(context!);
+            return;
+        }
 
+        CancellationToken token = context.RequestAborted;
         IDatabase db = redis.GetDatabase();
 
         var tweetStart = await db.StringGetAsync("tweetStart");
@@ -166,15 +138,42 @@ internal static class Extensions
                         .ToArray()
                 };
 
-                await response!.WriteAsync("data: ", context.RequestAborted);
-
-                await JsonSerializer.SerializeAsync(response.Body, anon);
-
-                await response!.WriteAsync("\n\n", context.RequestAborted);
-
-                await response!.Body!.FlushAsync(context.RequestAborted);
+                await WriteTweetEventAsync(response, token);
+                await WriteTweetDataAsync(response, anon, token);
             }
         }
         catch (TaskCanceledException) { }
+    }
+
+    /// <summary>
+    /// Writes a New Tweet Event to the SSE stream
+    /// </summary>
+    /// <param name="response"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    private static Task WriteTweetEventAsync(HttpResponse response, CancellationToken token = default)
+        => response.WriteAsync("event: New Tweet data\r\n", token);
+
+    /// <summary>
+    /// Writes a set of
+    /// </summary>
+    /// <typeparam name="TData"></typeparam>
+    /// <param name="response">The <see cref="HttpResponse"/> to write data to</param>
+    /// <param name="data">The data to serialize out to the response</param>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    private static async Task WriteTweetDataAsync<TData>(HttpResponse response, TData data, CancellationToken token = default)
+    {
+        await response.WriteAsync("data: ", token)
+            .ConfigureAwait(false);
+            
+        await JsonSerializer.SerializeAsync(response.Body, data, cancellationToken: token)
+            .ConfigureAwait(false);
+
+        await response.WriteAsync("\n\n", token)
+            .ConfigureAwait(false);
+
+        await response.Body.FlushAsync(token)
+            .ConfigureAwait(false);
     }
 }
