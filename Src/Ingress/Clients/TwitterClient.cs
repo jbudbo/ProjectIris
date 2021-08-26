@@ -25,13 +25,17 @@ namespace Ingress.Clients
             logger.Connecting(uri);
 
             var queryParams = options.Value?.ApiParameters;
-            queryParams["tweet.fields"] ??= "entities";
-            queryParams["media.fields"] ??= "type,url";
+
+            if (!queryParams.ContainsKey("tweet.fields"))
+                queryParams["tweet.fields"] = "entities";
+
+            if(!queryParams.ContainsKey("media.fields"))
+                queryParams["media.fields"] = "type,url";
 
 
-            UriBuilder builder = new(options.Value?.ApiUrl?.Host ?? "https://api.twitter.com")
+            UriBuilder builder = new("https://api.twitter.com")
             {
-                Path = uri.OriginalString,
+                Path = uri?.OriginalString ?? options?.Value?.ApiUrl?.OriginalString,
                 Query =  string.Join('&', queryParams.Select(p => $"{p.Key}={p.Value}"))
             };
 

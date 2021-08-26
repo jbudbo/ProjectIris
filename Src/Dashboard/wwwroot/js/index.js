@@ -17,50 +17,46 @@
     function renderMetrics(e) {
         if (!e || !e.data) return;
 
-        eTPS.innerText = e.data.tweetsPerSec;
-        eTweetsReceived.innerText = e.data.tweetsReceived;
-        eEmojiPerc.innerText = e.data.emojiPerc;
-        eUrlPerc.innerText = e.data.urlPerc;
-        ePicPerc.innerText = e.data.picPerc;
-        eHtPerc.innerText = e.data.hashTagPerc;
-        eMentionPerc.innerText = e.data.mentionPerc;
+        eTPS.innerText = e.data.tps;
+        eTweetsReceived.innerText = e.data.tweetCount;
+        eEmojiPerc.innerText = e.data.emojis.tweetsWithCount / e.data.tweetCount;
+        eUrlPerc.innerText = e.data.urls.tweetsWithCount / e.data.tweetCount;
+        ePicPerc.innerText = e.data.images.tweetsWithCount / e.data.tweetCount;
+        eHtPerc.innerText = e.data.hashTags.tweetsWithCount / e.data.tweetCount;
+        eMentionPerc.innerText = e.data.mentions.tweetsWithCount / e.data.tweetCount;
 
-        const topDomains = e.data.topDomains;
-
+        const topDomains = e.data.urls.entityTexts;
         let domainHtml = '';
         for (const td of topDomains) {
             domainHtml += `<li>${td}</li>`;
         }
         eTopDomains.innerHTML = domainHtml;
 
-        const topPicDomains = e.data.topPicDomains;
+        const topPicDomains = e.data.images.entityTexts;
         let picHtml = '';
         for (const tpd of topPicDomains) {
             picHtml += `<li>${tpd}</li>`;
         }
         eTopPicDomains.innerHTML = picHtml;
 
-        const topEmojis = e.data.topEmojis;
+        const topEmojis = e.data.emojis.entityTexts;
         let emojiHtml = '';
         for (const te of topEmojis) {
             emojiHtml += `<li>${te}</li>`;
         }
         eTopEmojis.innerHTML = emojiHtml;
 
-        const topHashTags = e.data.topHashTags;
+        const topHashTags = e.data.hashTags.entityTexts;
         let htHtml = '';
         for (const th of topHashTags) {
-            const parts = th.split('(');
-            const u = new URL(parts[0].trim());
-            htHtml += `<li><a href="${u}" target="_blank">${u.pathname.split('/')[2]}</a> (${parts[1]}</li>`;
+            htHtml += `<li>${th}</li>`;
         }
         eTopHashtags.innerHTML = htHtml;
 
-        const topMentions = e.data.topMentions;
+        const topMentions = e.data.mentions.entityTexts;
         let mentionHtml = '';
         for (const tm of topMentions) {
-            const parts = tm.split('(');
-            mentionHtml += `<li><a href="https://twitter.com/${parts[0].trim()}" target="_blank">${parts[0]}</a> (${parts[1]}</li>`;
+            mentionHtml += `<li>${tm}</li>`;
         }
         eTopMentions.innerHTML = mentionHtml;
     }

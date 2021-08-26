@@ -38,111 +38,72 @@ internal sealed class ServerSentEventsMiddleware
             response.Headers.Add("Cache-Control", "no-cache");
             response.Headers.Add("Content-Type", "text/event-stream");
 
-            while (!context.RequestAborted.IsCancellationRequested)
+            ulong msgId = 0;
+            while (!token.IsCancellationRequested)
             {
                 TimeSpan secondsSinceStart = DateTime.UtcNow - timeOfweetStart;
 
                 ITransaction transaction = db.CreateTransaction();
 
-                var tTweetCount = transaction.StringGetAsync("tweetCount");
+                var tweetCountTask = transaction.StringGetAsync("tweetCount");
 
-                var tTweetsWithUrls = transaction.StringGetAsync("tweetsWithUrls");
-                var tUrlCount = transaction.StringGetAsync("urlsCount");
+                var urlsTask = GetTweetDataAsync(transaction, "urls");
+                var imagesTask = GetTweetDataAsync(transaction, "images");
+                var emojisTask = GetTweetDataAsync(transaction, "emojis");
+                var hashTagsTask = GetTweetDataAsync(transaction, "hashTags", Format: "<a href=\"https://twitter.com/hashtag/{0}\" target=\"_blank\">{0}</a> ({1}%)");
+                var mentionsTask = GetTweetDataAsync(transaction, "mentions", Format: "<a href=\"https://twitter.com/{0}\" target=\"_blank\">{0}</a> ({1}%)");
 
-                var tTweetsWithImages = transaction.StringGetAsync("tweetsWithImages");
-                var tPicCount = transaction.StringGetAsync("imagesCount");
+                await Task.WhenAll(tweetCountTask, urlsTask, imagesTask, emojisTask, hashTagsTask, mentionsTask, transaction.ExecuteAsync())
+                    .ConfigureAwait(false);
 
-                var tTweetsWithEmojis = transaction.StringGetAsync("tweetsWithEmojis");
-                var tEmojiCount = transaction.StringGetAsync("emojisCount");
+                double tweetCount = double.TryParse(tweetCountTask.GetAwaiter().GetResult(), out double tc) ? tc : 0;
 
-                var tTweetsWithHashtags = transaction.StringGetAsync("tweetsWithHashTags");
-                var tHashtagCount = transaction.StringGetAsync("hashTagsCount");
-
-                var tTweetsWithMentions = transaction.StringGetAsync("tweetsWithMentions");
-                var tMentionCount = transaction.StringGetAsync("mentionsCount");
-
-                var tDomainLeaders = transaction.HashGetAllAsync("urls");
-                var tPicLeaders = transaction.HashGetAllAsync("images");
-                var tEmojiLeaders = transaction.HashGetAllAsync("emojis");
-                var tHashtagLeaders = transaction.HashGetAllAsync("hashTags");
-                var tMentionLeaders = transaction.HashGetAllAsync("mentions");
-
-                await transaction.ExecuteAsync();
-
-                var domainLeaders = await tDomainLeaders;
-                var picLeaders = await tPicLeaders;
-                var emojiLeaders = await tEmojiLeaders;
-                var hashtagLeaders = await tHashtagLeaders;
-                var mentionLeaders = await tMentionLeaders;
-
-                double tweetCount = double.TryParse(await tTweetCount, out double tc) ? tc : 0;
-
-                double tweetsWithUrls = double.TryParse(await tTweetsWithUrls, out double twu) ? twu : 0;
-                double urlCount = double.TryParse(await tUrlCount, out double uc) ? uc : 0;
-
-                double tweetsWithImages = double.TryParse(await tTweetsWithImages, out double twi) ? twi : 0;
-                double picCount = double.TryParse(await tPicCount, out double pc) ? pc : 0;
-
-                double tweetsWithEmojis = double.TryParse(await tTweetsWithEmojis, out double twe) ? twe : 0;
-                double emojiCount = double.TryParse(await tEmojiCount, out double ec) ? ec : 0;
-
-                double tweetsWithHashtags = double.TryParse(await tTweetsWithHashtags, out double twh) ? twh : 0;
-                double hashtagCount = double.TryParse(await tHashtagCount, out double hc) ? hc : 0;
-
-                double tweetsWithMentions = double.TryParse(await tTweetsWithMentions, out double twm) ? twm : 0;
-                double mentionsCount = double.TryParse(await tMentionCount, out double mc) ? mc : 0;
-
-                var anon = new
+                IDictionary<string, object> result = new Dictionary<string, object>
                 {
-                    tweetsPerSec = tweetCount / secondsSinceStart.TotalSeconds,
-                    tweetsReceived = tweetCount,
-
-                    emojiPerc = (tweetsWithEmojis / tweetCount) * 100.0,
-                    topEmojis = emojiLeaders
-                        .OrderByDescending(v => v.Value)
-                        .Take(5)
-                        .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
-                        .Select(e => $"{e.Item1} ({e.Item2 / emojiCount * 100.0}%)")
-                        .ToArray(),
-
-                    urlPerc = (tweetsWithUrls / tweetCount) * 100.0,
-                    topDomains = domainLeaders
-                        .OrderByDescending(v => v.Value)
-                        .Take(5)
-                        .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
-                        .Select(e => $"{e.Item1} ({e.Item2 / urlCount * 100.0}%)")
-                        .ToArray(),
-
-                    picPerc = (tweetsWithImages / tweetCount) * 100.0,
-                    topPicDomains = picLeaders
-                        .OrderByDescending(v => v.Value)
-                        .Take(5)
-                        .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
-                        .Select(e => $"{e.Item1} ({e.Item2 / picCount * 100.0}%)")
-                        .ToArray(),
-
-                    hashTagPerc = (tweetsWithHashtags / tweetCount) * 100.0,
-                    topHashTags = hashtagLeaders
-                        .OrderByDescending(v => v.Value)
-                        .Take(5)
-                        .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
-                        .Select(e => $"http://twitter.com/hashtag/{e.Item1} ({e.Item2 / hashtagCount * 100.0}%)")
-                        .ToArray(),
-
-                    mentionPerc = (tweetsWithMentions / tweetCount) * 100.0,
-                    topMentions = mentionLeaders
-                        .OrderByDescending(v => v.Value)
-                        .Take(5)
-                        .Select(e => (e.Name.ToString(), e.Value.TryParse(out double c) ? c : 0))
-                        .Select(e => $"{e.Item1} ({e.Item2 / picCount * 100.0}%)")
-                        .ToArray()
+                    [nameof(tweetCount)] = tweetCount,
+                    ["tps"] = tweetCount / secondsSinceStart.TotalSeconds,
+                    ["urls"] = urlsTask.GetAwaiter().GetResult(),
+                    ["images"] = imagesTask.GetAwaiter().GetResult(),
+                    ["emojis"] = emojisTask.GetAwaiter().GetResult(),
+                    ["hashTags"] = hashTagsTask.GetAwaiter().GetResult(),
+                    ["mentions"] = mentionsTask.GetAwaiter().GetResult(),
                 };
 
+                msgId = await WriteAndIncrementIdAsync(response, msgId, token);
                 await WriteTweetEventAsync(response, token);
-                await WriteTweetDataAsync(response, anon, token);
+                await WriteTweetDataAsync(response, result, token);
             }
         }
         catch (TaskCanceledException) { }
+    }
+
+    private static async Task<IDictionary<string, object>> GetTweetDataAsync(ITransaction transaction, string key
+        , int depth = 5, string Format = "{0} ({1}%)")
+    {
+        Task<RedisValue> overallCountTask = transaction.StringGetAsync($"{key}Count");
+        Task<RedisValue> tweetsWithCountTask = transaction.StringGetAsync($"tweetsWith{key.RaiseFirstChar()}");
+        Task<HashEntry[]> entitiesTask = transaction.HashGetAllAsync(key);
+
+        await Task.WhenAll(overallCountTask, tweetsWithCountTask, entitiesTask)
+            .ConfigureAwait(false);
+
+        double overallCount = double.TryParse(overallCountTask.GetAwaiter().GetResult(), out double oc) ? oc : 0;
+
+        double tweetsWithCount = double.TryParse(tweetsWithCountTask.GetAwaiter().GetResult(), out oc) ? oc : 0;
+
+        string[] entityTexts = entitiesTask.GetAwaiter().GetResult()
+            .OrderByDescending(v => v.Value)
+            .Take(depth)
+            .Select(e => (e.Name.ToString(), (e.Value.TryParse(out double c) ? c : 0) / overallCount * 100.0))
+            .Select(t => t.ToString(Format))
+            .ToArray();
+
+        return new Dictionary<string,object>(3)
+        {
+            [nameof(overallCount)] = overallCount,
+            [nameof(tweetsWithCount)] = tweetsWithCount,
+            [nameof(entityTexts)] = entityTexts
+        };
     }
 
     /// <summary>
@@ -152,7 +113,20 @@ internal sealed class ServerSentEventsMiddleware
     /// <param name="token"></param>
     /// <returns></returns>
     private static Task WriteTweetEventAsync(HttpResponse response, CancellationToken token = default)
-        => response.WriteAsync("event: New Tweet data\r\n", token);
+        => response.WriteAsync("event: New Tweet data\n\n", token);
+
+    /// <summary>
+    /// Writes a new event ID to the SSE stream
+    /// </summary>
+    /// <param name="response"></param>
+    /// <param name="id"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    private static async Task<ulong> WriteAndIncrementIdAsync(HttpResponse response, ulong id, CancellationToken token = default)
+    {
+        await response.WriteAsync($"id: {id++}\n\n", token);
+        return id;
+    }
 
     /// <summary>
     /// Writes a set of
