@@ -51,9 +51,10 @@ namespace Ingress
         /// <param name="builderContext"></param>
         /// <param name="services"></param>
         private static void SetupServices(HostBuilderContext builderContext, IServiceCollection services) => services
-            .Configure<TwitterOptions>(o => o.SetApiUrl(builderContext.Configuration["IRIS_TWITTER_ENDPOINT"]))
+            .Configure<TwitterOptions>(o => o.SetApiUrl(builderContext.Configuration["TWITTER_ENDPOINT"]))
             .AddHostedService<IngressWorker>()
             .AddRedis(builderContext.Configuration)
             .AddTwitterClient(builderContext.Configuration);
+
     }
 }

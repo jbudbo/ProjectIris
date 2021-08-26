@@ -14,7 +14,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .ConfigureHttpClient((_, client) =>
                 {
                     client.BaseAddress = new Uri("https://api.twitter.com");
-                    client.DefaultRequestHeaders.Authorization = new("Bearer", config["TWITTER_BEARER"]);
+                    client.DefaultRequestHeaders.Authorization = new("Bearer", config["IRIS_TWITTER_BEARER"]);
                 });
             return services;
         }

@@ -12,5 +12,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\RedisOptions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Support\LoggerExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Support\RedisExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Support\StringExtensions.cs" />
   </ItemGroup>
 </Project>

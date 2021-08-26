@@ -61,25 +61,27 @@ namespace Worker
                     return;
                 }
 
-                var entities = tweet.data.entities;
+                TwitterEntity entities = tweet.data.entities;
+
+                string[] emojis = emojiCache.ContainsEmojis(tweet.data.text).ToArray();
+
+                //  Need to move this to an options builder or at least a configuration element
+                string[] picHosts = new[] { "pic.twitter.com", "instagram.com" };
+                
+                PicUrlParser p = new();
+
+                UrlEntity[] imageUrls = entities.urls?.Where(url => picHosts.Contains(p.GetHost(url.display_url)))?.ToArray();
+                UrlEntity[] linkUrls = entities.urls?.Except(imageUrls).ToArray();
 
                 ITransaction trans = db.CreateTransaction();
 
-                Task tEmoji = AggEmojiAsync(trans, tweet.data.text);
-
-                await AggHashTagsAsync(trans, entities.hashtags)
-                    .ConfigureAwait(false);
-
-                await AggUrlsAsync(trans, entities.urls)
-                    .ConfigureAwait(false);
-
-                await AggAnnotationsAsync(trans, entities.annotations)
-                    .ConfigureAwait(false);
-
-                await AggMentionsAsync(trans, entities.mentions)
-                    .ConfigureAwait(false);
-
-                await tEmoji
+                await Task.WhenAll(
+                    QueueEntityDataAsync(trans, "emojis", emojis, s => s),
+                    QueueEntityDataAsync(trans, "hashTags", entities.hashtags, e => e.tag),
+                    QueueEntityDataAsync(trans, "annotations", entities.annotations, e => e.normalized_text),
+                    QueueEntityDataAsync(trans, "mentions", entities.mentions, e => e.username),
+                    QueueEntityDataAsync(trans, "images", imageUrls, e => e.expanded_url.Host),
+                    QueueEntityDataAsync(trans, "urls", linkUrls, e => e.expanded_url.Host))
                     .ConfigureAwait(false);
 
                 await trans.ExecuteAsync(CommandFlags.FireAndForget)
@@ -88,133 +90,28 @@ namespace Worker
         }
 
         /// <summary>
-        /// Aggregates Emoji data found within a Tweet String
+        /// Queues up a data load with the given <see cref="ITransaction"/> to be executed when the <see cref="ITransaction"/> is executed.
         /// </summary>
-        /// <param name="trans">The Redis transaction to work against</param>
-        /// <param name="text">The Tweet text to review</param>
+        /// <typeparam name="TEntity">The type of entity to load data for</typeparam>
+        /// <param name="trans">The <see cref="ITransaction"/> on which to queue the data load</param>
+        /// <param name="key">The key name to queue data against</param>
+        /// <param name="entities">One or More entity to load</param>
+        /// <param name="valueFunction">A means of identifying the relevant data on the entity</param>
         /// <returns></returns>
-        private async Task AggEmojiAsync(ITransaction trans, string text)
+        private static async Task QueueEntityDataAsync<TEntity>(ITransaction trans, string key, TEntity[] entities, Func<TEntity, string> valueFunction)
         {
-            string[] emojis = emojiCache.ContainsEmojis(text).ToArray();
-
-            if (emojis.Length is 0)
+            if (entities is null || entities.Length == 0) 
                 return;
 
-            await trans.StringIncrementAsync("tweetsWithEmojis", flags: CommandFlags.FireAndForget)
+            await trans.StringIncrementAsync($"tweetsWith{key.RaiseFirstChar()}", flags: CommandFlags.FireAndForget)
                 .ConfigureAwait(false);
 
-            foreach (var emoji in emojis)
+            for (int i = 0, j = entities.Length; i < j; i++)
             {
-                await trans.StringIncrementAsync("emojiCount", flags: CommandFlags.FireAndForget)
+                await trans.StringIncrementAsync($"{key}Count", flags: CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
 
-                await trans.HashIncrementAsync("emojis", emoji, flags: CommandFlags.FireAndForget)
-                    .ConfigureAwait(false);
-            }
-        }
-
-        /// <summary>
-        /// Aggregates HashTag data for a set of Tweet data
-        /// </summary>
-        /// <param name="trans"></param>
-        /// <param name="hashtags"></param>
-        /// <returns></returns>
-        private static async Task AggHashTagsAsync(ITransaction trans, HashtagEntity[] hashtags)
-        {
-            if (hashtags is null || hashtags.Length is 0)
-                return;
-
-            await trans.StringIncrementAsync("tweetsWithHashtags", flags: CommandFlags.FireAndForget)
-                .ConfigureAwait(false);
-
-            for (int i = 0, j = hashtags.Length; i < j; i++)
-            {
-                await trans.StringIncrementAsync("hashTagCount", flags: CommandFlags.FireAndForget)
-                    .ConfigureAwait(false);
-
-                await trans.HashIncrementAsync("hashtags", hashtags[i].tag, flags: CommandFlags.FireAndForget)
-                    .ConfigureAwait(false);
-            }
-        }
-
-        private static async Task AggUrlsAsync(ITransaction trans, UrlEntity[] urls)
-        {
-            if (urls is null || urls.Length is 0)
-                return;
-
-            string[] picHosts = new[] { "pic.twitter.com", "instagram.com" };
-
-            PicUrlParser p = new ();
-
-            UrlEntity[] imageUrls = urls.Where(url => picHosts.Contains(p.GetHost(url.display_url))).ToArray();
-            if (imageUrls.Length > 0)
-            {
-                await trans.StringIncrementAsync("tweetsWithImages", flags: CommandFlags.FireAndForget)
-                    .ConfigureAwait(false);
-
-                for (int i = 0, j = imageUrls.Length; i < j; i++)
-                {
-                    await trans.StringIncrementAsync("imageCount", flags: CommandFlags.FireAndForget)
-                        .ConfigureAwait(false);
-
-                    Uri uri = imageUrls[i].expanded_url;
-
-                    await trans.HashIncrementAsync("picDomains", uri.Host, flags: CommandFlags.FireAndForget)
-                        .ConfigureAwait(false);
-                }
-            }
-
-            UrlEntity[] linkUrls = urls.Except(imageUrls).ToArray();
-            if (linkUrls.Length > 0)
-            {
-                await trans.StringIncrementAsync("tweetsWithUrls", flags: CommandFlags.FireAndForget)
-                    .ConfigureAwait(false);
-
-                for (int i = 0, j = linkUrls.Length; i < j; i++)
-                {
-                    await trans.StringIncrementAsync("urlCount", flags: CommandFlags.FireAndForget)
-                        .ConfigureAwait(false);
-
-                    Uri uri = linkUrls[i].expanded_url;
-
-                    await trans.HashIncrementAsync("domains", uri.Host, flags: CommandFlags.FireAndForget)
-                        .ConfigureAwait(false);
-                }
-            }
-        }
-
-        private static async Task AggAnnotationsAsync(ITransaction trans, AnnotationEntity[] annotations)
-        {
-            if (annotations is null || annotations.Length is 0)
-                return;
-
-            await trans.StringIncrementAsync("tweetsWithAnnotations", flags: CommandFlags.FireAndForget)
-                .ConfigureAwait(false);
-
-            for (int i = 0, j = annotations.Length; i < j; i++)
-            {
-                await trans.StringIncrementAsync("annotationCount", flags: CommandFlags.FireAndForget)
-                    .ConfigureAwait(false);
-
-                await trans.HashIncrementAsync("annotations", annotations[i].normalized_text, flags: CommandFlags.FireAndForget)
-                    .ConfigureAwait(false);
-            }
-        }
-
-        private static async Task AggMentionsAsync(ITransaction trans, MentionEntity[] mentions)
-        {
-            if (mentions is null || mentions.Length is 0)
-                return;
-
-            await trans.StringIncrementAsync("tweetsWithMentions", flags: CommandFlags.FireAndForget)
-                .ConfigureAwait(false);
-
-            for (int i = 0, j = mentions.Length; i < j; i++)
-            {
-                await trans.StringIncrementAsync("mentionCount", flags: CommandFlags.FireAndForget)
-                .ConfigureAwait(false);
-
-                await trans.HashIncrementAsync("mentions", mentions[i].username, flags: CommandFlags.FireAndForget)
+                await trans.HashIncrementAsync(key, valueFunction(entities[i]), flags: CommandFlags.FireAndForget)
                     .ConfigureAwait(false);
             }
         }

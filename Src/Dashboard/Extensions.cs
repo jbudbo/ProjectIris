@@ -49,24 +49,24 @@ internal static class Extensions
                     var tTweetCount = transaction.StringGetAsync("tweetCount");
 
                     var tTweetsWithUrls = transaction.StringGetAsync("tweetsWithUrls");
-                    var tUrlCount = transaction.StringGetAsync("urlCount");
+                    var tUrlCount = transaction.StringGetAsync("urlsCount");
 
                     var tTweetsWithImages = transaction.StringGetAsync("tweetsWithImages");
-                    var tPicCount = transaction.StringGetAsync("imageCount");
+                    var tPicCount = transaction.StringGetAsync("imagesCount");
 
                     var tTweetsWithEmojis = transaction.StringGetAsync("tweetsWithEmojis");
-                    var tEmojiCount = transaction.StringGetAsync("emojiCount");
+                    var tEmojiCount = transaction.StringGetAsync("emojisCount");
 
-                    var tTweetsWithHashtags= transaction.StringGetAsync("tweetsWithHashtags");
-                    var tHashtagCount = transaction.StringGetAsync("hashTagCount");
+                    var tTweetsWithHashtags= transaction.StringGetAsync("tweetsWithHashTags");
+                    var tHashtagCount = transaction.StringGetAsync("hashTagsCount");
 
                     var tTweetsWithMentions= transaction.StringGetAsync("tweetsWithMentions");
-                    var tMentionCount = transaction.StringGetAsync("mentionCount");
+                    var tMentionCount = transaction.StringGetAsync("mentionsCount");
 
-                    var tDomainLeaders = transaction.HashGetAllAsync("domains");
-                    var tPicLeaders = transaction.HashGetAllAsync("picDomains");
+                    var tDomainLeaders = transaction.HashGetAllAsync("urls");
+                    var tPicLeaders = transaction.HashGetAllAsync("images");
                     var tEmojiLeaders = transaction.HashGetAllAsync("emojis");
-                    var tHashtagLeaders = transaction.HashGetAllAsync("hashtags");
+                    var tHashtagLeaders = transaction.HashGetAllAsync("hashTags");
                     var tMentionLeaders = transaction.HashGetAllAsync("mentions");
 
                     await transaction.ExecuteAsync();

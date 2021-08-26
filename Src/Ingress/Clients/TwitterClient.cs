@@ -1,18 +1,22 @@
 ﻿using System.Text;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Ingress.Clients
 {
     using Interfaces;
+    using Models;    
 
     internal sealed class TwitterClient : ITwitterClient
     {
         private readonly ILogger<TwitterClient> logger;
+        private readonly IOptions<TwitterOptions> options;
         private readonly HttpClient baseClient;
 
-        public TwitterClient(HttpClient httpClient, ILogger<TwitterClient> logger)
+        public TwitterClient(HttpClient httpClient, ILogger<TwitterClient> logger, IOptions<TwitterOptions> options)
         {
             this.logger = logger;
+            this.options = options;
             baseClient = httpClient;
         }
 
