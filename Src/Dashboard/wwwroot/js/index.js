@@ -1,15 +1,25 @@
 ﻿window["metrics"] = ((d) => {
     const eTweetsReceived = d.getElementById('tweetsReceived')
         , eTPS = d.getElementById('tps')
+
         , eEmojiPerc = d.getElementById('emojiPerc')
-        , eUrlPerc = d.getElementById('urlPerc')
-        , eHtPerc = d.getElementById('htPerc')
-        , ePicPerc = d.getElementById('picPerc')
-        , eMentionPerc = d.getElementById('mentionPerc')
-        , eTopDomains = d.getElementById('topDomains')
-        , eTopPicDomains = d.getElementById('topPicDomains')
+        , eEPT = d.getElementById('ept')
         , eTopEmojis = d.getElementById('topEmojis')
+
+        , eUrlPerc = d.getElementById('urlPerc')
+        , eUPT = d.getElementById('upt')
+        , eTopDomains = d.getElementById('topDomains')
+
+        , eHtPerc = d.getElementById('htPerc')
+        , eHTPT = d.getElementById('htpt')
         , eTopHashtags = d.getElementById('topHashTags')
+
+        , ePicPerc = d.getElementById('picPerc')
+        , ePPT = d.getElementById('ppt')
+        , eTopPicDomains = d.getElementById('topPicDomains')
+
+        , eMentionPerc = d.getElementById('mentionPerc')
+        , eMPT = d.getElementById('mpt')
         , eTopMentions = d.getElementById('topMentions');
     
     let worker;
@@ -20,10 +30,15 @@
         eTPS.innerText = e.data.tps;
         eTweetsReceived.innerText = e.data.tweetCount;
         eEmojiPerc.innerText = e.data.emojis.tweetsWithCount / e.data.tweetCount * 100.0;
+        eEPT.innerText = e.data.emojis.overallCount / e.data.emojis.tweetsWithCount;
         eUrlPerc.innerText = e.data.urls.tweetsWithCount / e.data.tweetCount * 100.0;
+        eUPT.innerText = e.data.urls.overallCount / e.data.urls.tweetsWithCount;
         ePicPerc.innerText = e.data.images.tweetsWithCount / e.data.tweetCount * 100.0;
+        ePPT.innerText = e.data.images.overallCount / e.data.images.tweetsWithCount;
         eHtPerc.innerText = e.data.hashTags.tweetsWithCount / e.data.tweetCount * 100.0;
+        eHTPT.innerText = e.data.hashTags.overallCount / e.data.hashTags.tweetsWithCount;
         eMentionPerc.innerText = e.data.mentions.tweetsWithCount / e.data.tweetCount * 100.0;
+        eMPT.innerText = e.data.mentions.overallCount / e.data.mentions.tweetsWithCount;
 
         const topDomains = e.data.urls.entityTexts;
         let domainHtml = '';
