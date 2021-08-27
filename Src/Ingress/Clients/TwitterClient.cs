@@ -24,43 +24,51 @@ namespace Ingress.Clients
         {
             logger.Connecting(uri);
 
-            var queryParams = options.Value?.ApiParameters;
-
-            if (!queryParams.ContainsKey("tweet.fields"))
-                queryParams["tweet.fields"] = "entities";
-
-            if(!queryParams.ContainsKey("media.fields"))
-                queryParams["media.fields"] = "type,url";
-
-
-            UriBuilder builder = new("https://api.twitter.com")
+            try
             {
-                Path = uri?.OriginalString ?? options?.Value?.ApiUrl?.OriginalString,
-                Query =  string.Join('&', queryParams.Select(p => $"{p.Key}={p.Value}"))
-            };
+                var queryParams = options.Value?.ApiParameters;
 
-            using HttpResponseMessage response = await baseClient.GetAsync(builder.Uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
-                .ConfigureAwait(false);
+                if (!queryParams.ContainsKey("tweet.fields"))
+                    queryParams["tweet.fields"] = "entities";
 
-            string rateLimit = response.Headers.TryGetValues("x-rate-limit-limit", out var limit) ? limit.FirstOrDefault() : null;
-            string rateLimitRemaining = response.Headers.TryGetValues("x-rate-limit-remaining", out var remaining) ? remaining.FirstOrDefault() : null;
+                if (!queryParams.ContainsKey("media.fields"))
+                    queryParams["media.fields"] = "type,url";
 
-            if (!response.IsSuccessStatusCode)
-            {
-                switch (response.StatusCode)
+                UriBuilder builder = new("https://api.twitter.com")
                 {
-                    case System.Net.HttpStatusCode.TooManyRequests:
-                        //  This would be our opportunity to try again 
-                        break;
+                    Path = uri?.OriginalString ?? options?.Value?.ApiUrl?.OriginalString,
+                    Query = string.Join('&', queryParams.Select(p => $"{p.Key}={p.Value}"))
+                };
+
+                using HttpResponseMessage response = await baseClient.GetAsync(builder.Uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                    .ConfigureAwait(false);
+
+                string rateLimit = response.Headers.TryGetValues("x-rate-limit-limit", out var limit) ? limit.FirstOrDefault() : null;
+                string rateLimitRemaining = response.Headers.TryGetValues("x-rate-limit-remaining", out var remaining) ? remaining.FirstOrDefault() : null;
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    switch (response.StatusCode)
+                    {
+                        case System.Net.HttpStatusCode.TooManyRequests:
+                            //  This would be our opportunity to try again 
+                            break;
+                    }
+                }
+                await using Stream s = await response.Content.ReadAsStreamAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                using StreamReader streamReader = new(s, Encoding.UTF8);
+
+                while (!cancellationToken.IsCancellationRequested && !streamReader.EndOfStream)
+                {
+                    await OnTweet(await streamReader.ReadLineAsync()
+                        .ConfigureAwait(false));
                 }
             }
-            await using Stream s = await response.Content.ReadAsStreamAsync(cancellationToken)
-                .ConfigureAwait(false);
-            using StreamReader streamReader = new(s, Encoding.UTF8);
-
-            while (!cancellationToken.IsCancellationRequested && !streamReader.EndOfStream)
+            catch (TaskCanceledException)
             {
-                await OnTweet(await streamReader.ReadLineAsync().ConfigureAwait(false));
+                logger.CancelRequest();
             }
         }
 

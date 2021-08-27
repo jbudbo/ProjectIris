@@ -14,6 +14,11 @@ internal sealed class ServerSentEventsMiddleware
         this.redis = redis;
     }
 
+    /// <summary>
+    /// Begin streaming SSE events back to a caller
+    /// </summary>
+    /// <param name="context"></param>
+    /// <returns></returns>
     public async Task InvokeAsync(HttpContext context)
     {
         if (context?.Request is null || context.Request.Headers.Accept != "text/event-stream")
@@ -77,12 +82,20 @@ internal sealed class ServerSentEventsMiddleware
         catch (TaskCanceledException) { }
     }
 
-    private static async Task<IDictionary<string, object>> GetTweetDataAsync(ITransaction transaction, string key
+    /// <summary>
+    /// Aggregates all the Tweet data for a given category into a dictionary of common elements
+    /// </summary>
+    /// <param name="transaction">The <see cref="ITransaction"/> to queue work on</param>
+    /// <param name="category">The category of tweet data to aggregate</param>
+    /// <param name="depth">The top N numbers of entities to aggregate</param>
+    /// <param name="Format">A string format to use when building text representation of entites</param>
+    /// <returns></returns>
+    private static async Task<IDictionary<string, object>> GetTweetDataAsync(ITransaction transaction, string category
         , int depth = 5, string Format = "{0} ({1}%)")
     {
-        Task<RedisValue> overallCountTask = transaction.StringGetAsync($"{key}Count");
-        Task<RedisValue> tweetsWithCountTask = transaction.StringGetAsync($"tweetsWith{key.RaiseFirstChar()}");
-        Task<HashEntry[]> entitiesTask = transaction.HashGetAllAsync(key);
+        Task<RedisValue> overallCountTask = transaction.StringGetAsync($"{category}Count");
+        Task<RedisValue> tweetsWithCountTask = transaction.StringGetAsync($"tweetsWith{category.RaiseFirstChar()}");
+        Task<HashEntry[]> entitiesTask = transaction.HashGetAllAsync(category);
 
         await Task.WhenAll(overallCountTask, tweetsWithCountTask, entitiesTask)
             .ConfigureAwait(false);
@@ -98,7 +111,7 @@ internal sealed class ServerSentEventsMiddleware
             .Select(t => t.ToString(Format))
             .ToArray();
 
-        return new Dictionary<string,object>(3)
+        return new Dictionary<string, object>(3)
         {
             [nameof(overallCount)] = overallCount,
             [nameof(tweetsWithCount)] = tweetsWithCount,
@@ -138,16 +151,20 @@ internal sealed class ServerSentEventsMiddleware
     /// <returns></returns>
     private static async Task WriteTweetDataAsync<TData>(HttpResponse response, TData data, CancellationToken token = default)
     {
-        await response.WriteAsync("data: ", token)
-            .ConfigureAwait(false);
-            
-        await JsonSerializer.SerializeAsync(response.Body, data, cancellationToken: token)
-            .ConfigureAwait(false);
+        try
+        {
+            await response.WriteAsync("data: ", token)
+                .ConfigureAwait(false);
 
-        await response.WriteAsync("\n\n", token)
-            .ConfigureAwait(false);
+            await JsonSerializer.SerializeAsync(response.Body, data, cancellationToken: token)
+                .ConfigureAwait(false);
 
-        await response.Body.FlushAsync(token)
-            .ConfigureAwait(false);
+            await response.WriteAsync("\n\n", token)
+                .ConfigureAwait(false);
+
+            await response.Body.FlushAsync(token)
+                .ConfigureAwait(false);
+        }
+        catch (TaskCanceledException) { }
     }
 }

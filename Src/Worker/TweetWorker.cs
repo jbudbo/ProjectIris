@@ -33,59 +33,66 @@ namespace Worker
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            logger.Startup();
+            logger.Startup(nameof(TweetWorker));
 
-            await LoadEmojiDataAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            IDatabase db = redis.GetDatabase();
-
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                RedisValue rawTweet = await db.ListLeftPopAsync("tweets")
+                await LoadEmojiDataAsync(cancellationToken)
                     .ConfigureAwait(false);
 
-                if (!rawTweet.HasValue)
-                    continue;
+                IDatabase db = redis.GetDatabase();
 
-                logger.TweetReceived(rawTweet);
-
-                using MemoryStream buff = new(Encoding.UTF8.GetBytes(rawTweet));
-
-                Tweet tweet = await JsonSerializer.DeserializeAsync<Tweet>(buff, cancellationToken: cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (tweet.data is null)
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    logger.LogError("Something went wrong with our tweet stream");
-                    return;
+                    RedisValue rawTweet = await db.ListLeftPopAsync("tweets")
+                        .ConfigureAwait(false);
+
+                    if (!rawTweet.HasValue)
+                        continue;
+
+                    logger.TweetReceived(rawTweet);
+
+                    await using MemoryStream buff = new(Encoding.UTF8.GetBytes(rawTweet));
+
+                    Tweet tweet = await JsonSerializer.DeserializeAsync<Tweet>(buff, cancellationToken: cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (tweet.data is null)
+                    {
+                        logger.LogError("Something went wrong with our tweet stream");
+                        return;
+                    }
+
+                    TwitterEntity entities = tweet.data.entities;
+
+                    string[] emojis = emojiCache.ContainsEmojis(tweet.data.text).ToArray();
+
+                    //  Need to move this to an options builder or at least a configuration element
+                    string[] picHosts = new[] { "pic.twitter.com", "instagram.com" };
+
+                    PicUrlParser p = new();
+
+                    UrlEntity[] imageUrls = entities.urls?.Where(url => picHosts.Contains(p.GetHost(url.display_url)))?.ToArray();
+                    UrlEntity[] linkUrls = entities.urls?.Except(imageUrls).ToArray();
+
+                    ITransaction trans = db.CreateTransaction();
+
+                    await Task.WhenAll(
+                        QueueEntityDataAsync(trans, "emojis", emojis, s => s),
+                        QueueEntityDataAsync(trans, "hashTags", entities.hashtags, e => e.tag),
+                        QueueEntityDataAsync(trans, "annotations", entities.annotations, e => e.normalized_text),
+                        QueueEntityDataAsync(trans, "mentions", entities.mentions, e => e.username),
+                        QueueEntityDataAsync(trans, "images", imageUrls, e => e.expanded_url.Host),
+                        QueueEntityDataAsync(trans, "urls", linkUrls, e => e.expanded_url.Host))
+                        .ConfigureAwait(false);
+
+                    await trans.ExecuteAsync(CommandFlags.FireAndForget)
+                        .ConfigureAwait(false);
                 }
-
-                TwitterEntity entities = tweet.data.entities;
-
-                string[] emojis = emojiCache.ContainsEmojis(tweet.data.text).ToArray();
-
-                //  Need to move this to an options builder or at least a configuration element
-                string[] picHosts = new[] { "pic.twitter.com", "instagram.com" };
-                
-                PicUrlParser p = new();
-
-                UrlEntity[] imageUrls = entities.urls?.Where(url => picHosts.Contains(p.GetHost(url.display_url)))?.ToArray();
-                UrlEntity[] linkUrls = entities.urls?.Except(imageUrls).ToArray();
-
-                ITransaction trans = db.CreateTransaction();
-
-                await Task.WhenAll(
-                    QueueEntityDataAsync(trans, "emojis", emojis, s => s),
-                    QueueEntityDataAsync(trans, "hashTags", entities.hashtags, e => e.tag),
-                    QueueEntityDataAsync(trans, "annotations", entities.annotations, e => e.normalized_text),
-                    QueueEntityDataAsync(trans, "mentions", entities.mentions, e => e.username),
-                    QueueEntityDataAsync(trans, "images", imageUrls, e => e.expanded_url.Host),
-                    QueueEntityDataAsync(trans, "urls", linkUrls, e => e.expanded_url.Host))
-                    .ConfigureAwait(false);
-
-                await trans.ExecuteAsync(CommandFlags.FireAndForget)
-                    .ConfigureAwait(false);
+            }
+            catch (TaskCanceledException)
+            {
+                logger.CancelRequest();
             }
         }
 
@@ -123,17 +130,24 @@ namespace Worker
         /// <returns></returns>
         private async Task LoadEmojiDataAsync(CancellationToken cancellationToken)
         {
-            logger.EmojisLoading();
+            try
+            {
+                logger.EmojisLoading();
 
-            emojiCache = await client.DownloadEmojisAsync(cancellationToken)
-                .ConfigureAwait(false);
+                emojiCache = await client.DownloadEmojisAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
-            logger.EmojisLoaded(emojiCache.Count);
+                logger.EmojisLoaded(emojiCache.Count);
+            }
+            catch (TaskCanceledException)
+            {
+                logger.CancelRequest();
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.Shutdown();
+            logger.Shutdown(nameof(TweetWorker));
 
             return Task.CompletedTask;
         }

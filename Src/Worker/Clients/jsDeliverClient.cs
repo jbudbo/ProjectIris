@@ -40,13 +40,22 @@ namespace Worker.Clients
 
             logger.DownloadingEmojiData(baseClient.BaseAddress, resource);
 
-            await using Stream s = await baseClient.GetStreamAsync(resource, cancellationToken)
-                .ConfigureAwait(false);
+            try
+            {
+                await using Stream s = await baseClient.GetStreamAsync(resource, cancellationToken)
+                    .ConfigureAwait(false);
 
-            var emojiData = await JsonSerializer.DeserializeAsync<EmojiData[]>(s, cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
+                var emojiData = await JsonSerializer.DeserializeAsync<EmojiData[]>(s, cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
 
-            return new EmojiMasterList(emojiData);
+                return new EmojiMasterList(emojiData);
+            }
+            catch (TaskCanceledException)
+            {
+                logger.CancelRequest();
+            }
+
+            return new EmojiMasterList(Array.Empty<EmojiData>());
         }
     }
 }

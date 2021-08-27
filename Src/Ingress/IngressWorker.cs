@@ -34,7 +34,7 @@ namespace Ingress
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            logger.Startup();
+            logger.Startup(nameof(Ingress));
 
             db = redis.GetDatabase();
 
@@ -42,8 +42,15 @@ namespace Ingress
             await db.StringSetAsync("tweetStart", DateTime.UtcNow.Ticks, flags: CommandFlags.FireAndForget)
                 .ConfigureAwait(false);
 
-            await client.StartAsync(options.Value.ApiUrl, OnTweetAsync, cancellationToken)
-                .ConfigureAwait(false);
+            try
+            {
+                await client.StartAsync(options.Value.ApiUrl, OnTweetAsync, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (TaskCanceledException)
+            {
+                logger.CancelRequest();
+            }
         }
 
         private async Task OnTweetAsync(string tweet)
@@ -65,7 +72,7 @@ namespace Ingress
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.Shutdown();
+            logger.Shutdown(nameof(IngressWorker));
 
             client.Drop();
 
