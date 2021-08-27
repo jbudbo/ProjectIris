@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Worker.Tests", "..\Testing\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonLogic.Tests", "..\Testing\CommonLogic.Tests\CommonLogic.Tests.csproj", "{B456111D-1281-4677-A92F-7F35BB34356C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dashboard.Tests", "..\Testing\Dashboard.Tests\Dashboard.Tests.csproj", "{4B0EFA5C-C506-4564-9119-D540C845FF53}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		CommonLogic\CommonLogic.projitems*{2c12d894-f17f-4e2b-b8b2-3343cf04e793}*SharedItemsImports = 5
@@ -60,6 +62,10 @@ Global
 		{B456111D-1281-4677-A92F-7F35BB34356C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B456111D-1281-4677-A92F-7F35BB34356C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B456111D-1281-4677-A92F-7F35BB34356C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B0EFA5C-C506-4564-9119-D540C845FF53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B0EFA5C-C506-4564-9119-D540C845FF53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B0EFA5C-C506-4564-9119-D540C845FF53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B0EFA5C-C506-4564-9119-D540C845FF53}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
