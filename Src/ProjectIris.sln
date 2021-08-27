@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dashboard", "Dashboard\Dash
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CommonLogic", "CommonLogic\CommonLogic.shproj", "{FC927D17-BB48-44D6-BC96-77ACDCDB68FC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingress.Tests", "..\Testing\Ingress.Tests\Ingress.Tests.csproj", "{C1C0B8C4-952C-46E5-8F80-AE249C3B2FDB}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		CommonLogic\CommonLogic.projitems*{2c12d894-f17f-4e2b-b8b2-3343cf04e793}*SharedItemsImports = 5
@@ -41,6 +43,10 @@ Global
 		{F57F909C-B9E1-4CEC-8693-B8EF54D3A38E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F57F909C-B9E1-4CEC-8693-B8EF54D3A38E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F57F909C-B9E1-4CEC-8693-B8EF54D3A38E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1C0B8C4-952C-46E5-8F80-AE249C3B2FDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1C0B8C4-952C-46E5-8F80-AE249C3B2FDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1C0B8C4-952C-46E5-8F80-AE249C3B2FDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1C0B8C4-952C-46E5-8F80-AE249C3B2FDB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

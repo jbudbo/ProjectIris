@@ -44,7 +44,7 @@ namespace Ingress
 
             try
             {
-                await client.StartAsync(options.Value.ApiUrl, OnTweetAsync, cancellationToken)
+                await client.StartAsync(options?.Value?.ApiUrl, OnTweetAsync, cancellationToken)
                     .ConfigureAwait(false);
             }
             catch (TaskCanceledException)
@@ -73,8 +73,6 @@ namespace Ingress
         public Task StopAsync(CancellationToken cancellationToken)
         {
             logger.Shutdown(nameof(IngressWorker));
-
-            client.Drop();
 
             return Task.CompletedTask;
         }

@@ -11,13 +11,13 @@ namespace Ingress.Clients
     {
         private readonly ILogger<TwitterClient> logger;
         private readonly IOptions<TwitterOptions> options;
-        private readonly HttpClient baseClient;
+        private readonly IHttpClientFactory httpClientFactory;
 
-        public TwitterClient(HttpClient httpClient, ILogger<TwitterClient> logger, IOptions<TwitterOptions> options)
+        public TwitterClient(IHttpClientFactory httpClientFactory, ILogger<TwitterClient> logger, IOptions<TwitterOptions> options)
         {
             this.logger = logger;
             this.options = options;
-            baseClient = httpClient;
+            this.httpClientFactory = httpClientFactory;
         }
 
         public async Task StartAsync(Uri uri, Func<string, Task> OnTweet, CancellationToken cancellationToken)
@@ -26,7 +26,7 @@ namespace Ingress.Clients
 
             try
             {
-                var queryParams = options.Value?.ApiParameters;
+                var queryParams = options?.Value?.ApiParameters ?? new Dictionary<string,string>();
 
                 if (!queryParams.ContainsKey("tweet.fields"))
                     queryParams["tweet.fields"] = "entities";
@@ -40,6 +40,7 @@ namespace Ingress.Clients
                     Query = string.Join('&', queryParams.Select(p => $"{p.Key}={p.Value}"))
                 };
 
+                using HttpClient baseClient = httpClientFactory.CreateClient();
                 using HttpResponseMessage response = await baseClient.GetAsync(builder.Uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                     .ConfigureAwait(false);
 
@@ -51,8 +52,12 @@ namespace Ingress.Clients
                     switch (response.StatusCode)
                     {
                         case System.Net.HttpStatusCode.TooManyRequests:
-                            //  This would be our opportunity to try again 
+                            //  This would be our opportunity to try again
                             break;
+
+                        default: // Otherwise we really can't do much else here
+
+                            return;
                     }
                 }
                 await using Stream s = await response.Content.ReadAsStreamAsync(cancellationToken)
@@ -62,20 +67,15 @@ namespace Ingress.Clients
 
                 while (!cancellationToken.IsCancellationRequested && !streamReader.EndOfStream)
                 {
-                    await OnTweet(await streamReader.ReadLineAsync()
-                        .ConfigureAwait(false));
+                    var line = await streamReader.ReadLineAsync()
+                        .ConfigureAwait(false);
+                    await (OnTweet?.Invoke(line) ?? Task.CompletedTask);
                 }
             }
             catch (TaskCanceledException)
             {
                 logger.CancelRequest();
             }
-        }
-
-        public void Drop()
-        {
-            baseClient.CancelPendingRequests();
-            baseClient.Dispose();
         }
     }
 }

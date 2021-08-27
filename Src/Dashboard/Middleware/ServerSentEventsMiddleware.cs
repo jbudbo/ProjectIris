@@ -91,7 +91,7 @@ internal sealed class ServerSentEventsMiddleware
     /// <param name="Format">A string format to use when building text representation of entites</param>
     /// <returns></returns>
     private static async Task<IDictionary<string, object>> GetTweetDataAsync(ITransaction transaction, string category
-        , int depth = 5, string Format = "{0} ({1}%)")
+        , int depth = 10, string Format = "{0} ({1}%)")
     {
         Task<RedisValue> overallCountTask = transaction.StringGetAsync($"{category}Count");
         Task<RedisValue> tweetsWithCountTask = transaction.StringGetAsync($"tweetsWith{category.RaiseFirstChar()}");
