@@ -72,16 +72,16 @@ namespace Worker
 
                     PicUrlParser p = new();
 
-                    UrlEntity[] imageUrls = entities.urls?.Where(url => picHosts.Contains(p.GetHost(url.display_url)))?.ToArray();
-                    UrlEntity[] linkUrls = entities.urls?.Except(imageUrls).ToArray();
+                    UrlEntity[] imageUrls = entities?.urls?.Where(url => picHosts.Contains(p.GetHost(url.display_url)))?.ToArray();
+                    UrlEntity[] linkUrls = entities?.urls?.Except(imageUrls).ToArray();
 
                     ITransaction trans = db.CreateTransaction();
 
                     await Task.WhenAll(
                         QueueEntityDataAsync(trans, "emojis", emojis, s => s),
-                        QueueEntityDataAsync(trans, "hashTags", entities.hashtags, e => e.tag),
-                        QueueEntityDataAsync(trans, "annotations", entities.annotations, e => e.normalized_text),
-                        QueueEntityDataAsync(trans, "mentions", entities.mentions, e => e.username),
+                        QueueEntityDataAsync(trans, "hashTags", entities?.hashtags, e => e.tag),
+                        QueueEntityDataAsync(trans, "annotations", entities?.annotations, e => e.normalized_text),
+                        QueueEntityDataAsync(trans, "mentions", entities?.mentions, e => e.username),
                         QueueEntityDataAsync(trans, "images", imageUrls, e => e.expanded_url.Host),
                         QueueEntityDataAsync(trans, "urls", linkUrls, e => e.expanded_url.Host))
                         .ConfigureAwait(false);

@@ -5,7 +5,7 @@
     /// <summary>
     /// An HTTP Client used to download and provide an <see cref="EmojiMasterList"/>
     /// </summary>
-    internal interface IEmojiClient
+    public interface IEmojiClient
     {
         /// <summary>
         /// Downloads Emoji data and provides back the information in a <see cref="EmojiMasterList"/>

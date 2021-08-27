@@ -20,8 +20,8 @@
 
             if (Uri.TryCreate($"http://{uri.OriginalString}", UriKind.Absolute, out Uri u))
                 return u.Host;
-            
-            return GetComponents(uri, UriComponents.Host, UriFormat.Unescaped);
+
+            return string.Empty;
         }
     }
 }

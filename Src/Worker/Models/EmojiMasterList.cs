@@ -6,13 +6,13 @@ namespace Worker.Models
     /// <summary>
     /// A clean set of searchable Emoji data
     /// </summary>
-    internal sealed class EmojiMasterList : IReadOnlyCollection<string>
+    public sealed class EmojiMasterList : IReadOnlyCollection<string>
     {
         private readonly Dictionary<string, string> emojis = new();
 
         public EmojiMasterList(IEnumerable<EmojiData> emojiData)
         {
-            foreach(var emoji in emojiData)
+            foreach(var emoji in emojiData.Where(e => !string.IsNullOrWhiteSpace(e.unified)))
             {
                 IEnumerable<string> emojiChars = emoji.unified
                     .Split('-')
@@ -30,6 +30,9 @@ namespace Worker.Models
         /// <returns></returns>
         public IEnumerable<string> ContainsEmojis(string text)
         {
+            if (string.IsNullOrWhiteSpace(text))
+                yield break;
+
             foreach (var emoji in emojis)
             {
                 if (text.Contains(emoji.Key))

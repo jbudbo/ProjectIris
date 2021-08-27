@@ -17,16 +17,13 @@ namespace Worker.Clients
 
         private readonly ILogger<JsDeliverClient> logger;
         private readonly IOptions<EmojiClientOptions> options;
-        private readonly HttpClient baseClient;
+        private readonly IHttpClientFactory httpClientFactory;
 
-        public JsDeliverClient(HttpClient httpClient, IOptions<EmojiClientOptions> options, ILogger<JsDeliverClient> logger)
+        public JsDeliverClient(IHttpClientFactory httpClientFactory, IOptions<EmojiClientOptions> options, ILogger<JsDeliverClient> logger)
         {
             this.logger = logger;
             this.options = options;
-            baseClient = httpClient;
-
-            //  If we didn't get a client with a base address, use our primary host
-            baseClient.BaseAddress ??= new Uri(options.Value.Host ?? PRIMARY_HOST);
+            this.httpClientFactory = httpClientFactory;
         }
 
         /// <summary>
@@ -36,7 +33,12 @@ namespace Worker.Clients
         /// <returns></returns>
         public async Task<EmojiMasterList> DownloadEmojisAsync(CancellationToken cancellationToken = default)
         {
-            string resource = options.Value.Resource ?? PRIMARY_RESOURCE;
+            string resource = options?.Value?.Resource ?? PRIMARY_RESOURCE;
+
+            using var baseClient = httpClientFactory.CreateClient();
+
+            //  If we didn't get a client with a base address, use our primary host
+            baseClient.BaseAddress ??= new Uri(options?.Value?.Host ?? PRIMARY_HOST);
 
             logger.DownloadingEmojiData(baseClient.BaseAddress, resource);
 
@@ -49,6 +51,10 @@ namespace Worker.Clients
                     .ConfigureAwait(false);
 
                 return new EmojiMasterList(emojiData);
+            }
+            catch (JsonException jex)
+            {
+                logger.LogError(jex, "An error occurred retrieving Emoji data");
             }
             catch (TaskCanceledException)
             {

@@ -9,7 +9,7 @@
     /// <param name="category">The Emoji Category</param>
     /// <param name="subcategory">The Emoji SubCategory</param>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Names are kept lower to ease with JSON Serialization")]
-    internal sealed record EmojiData(
+    public sealed record EmojiData(
         string name,
         string unified,
         string non_qualified,
