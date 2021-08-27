@@ -17,9 +17,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingress.Tests", "..\Testing
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Worker.Tests", "..\Testing\Worker.Tests\Worker.Tests.csproj", "{A073253C-702B-4739-A8D7-0243C4209537}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonLogic.Tests", "..\Testing\CommonLogic.Tests\CommonLogic.Tests.csproj", "{B456111D-1281-4677-A92F-7F35BB34356C}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		CommonLogic\CommonLogic.projitems*{2c12d894-f17f-4e2b-b8b2-3343cf04e793}*SharedItemsImports = 5
+		CommonLogic\CommonLogic.projitems*{b456111d-1281-4677-a92f-7f35bb34356c}*SharedItemsImports = 5
 		CommonLogic\CommonLogic.projitems*{e872369c-728e-4684-bbad-8089f9b414b1}*SharedItemsImports = 5
 		CommonLogic\CommonLogic.projitems*{f57f909c-b9e1-4cec-8693-b8ef54d3a38e}*SharedItemsImports = 5
 		CommonLogic\CommonLogic.projitems*{fc927d17-bb48-44d6-bc96-77acdcdb68fc}*SharedItemsImports = 13
@@ -53,6 +56,10 @@ Global
 		{A073253C-702B-4739-A8D7-0243C4209537}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A073253C-702B-4739-A8D7-0243C4209537}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A073253C-702B-4739-A8D7-0243C4209537}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B456111D-1281-4677-A92F-7F35BB34356C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B456111D-1281-4677-A92F-7F35BB34356C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B456111D-1281-4677-A92F-7F35BB34356C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B456111D-1281-4677-A92F-7F35BB34356C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

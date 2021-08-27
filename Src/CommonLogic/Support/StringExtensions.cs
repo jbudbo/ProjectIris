@@ -8,6 +8,6 @@
         /// <param name="source"></param>
         /// <returns></returns>
         public static string RaiseFirstChar(this string source)
-            => string.Concat(char.ToUpper(source[0]), source[1..]);
+            => string.IsNullOrWhiteSpace(source) ? source : string.Concat(char.ToUpper(source[0]), source?[1..]);
     }
 }
