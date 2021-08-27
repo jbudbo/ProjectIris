@@ -12,17 +12,6 @@ function startSse() {
     evtSource.onopen = function (evt) {
         this.onmessage = processMessage;
     }
-
-    //evtSource.onerror = function (evt) {
-    //    debugger;
-    //}
-
-    //evtSource.onmessage = function (evt) {
-    //    debugger;
-    //    const data = JSON.parse(evt.data);
-
-    //    postMessage(data);
-    //};
 }
 
 self.onmessage = function (e) {

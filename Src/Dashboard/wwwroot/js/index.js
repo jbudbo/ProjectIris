@@ -19,11 +19,11 @@
 
         eTPS.innerText = e.data.tps;
         eTweetsReceived.innerText = e.data.tweetCount;
-        eEmojiPerc.innerText = e.data.emojis.tweetsWithCount / e.data.tweetCount;
-        eUrlPerc.innerText = e.data.urls.tweetsWithCount / e.data.tweetCount;
-        ePicPerc.innerText = e.data.images.tweetsWithCount / e.data.tweetCount;
-        eHtPerc.innerText = e.data.hashTags.tweetsWithCount / e.data.tweetCount;
-        eMentionPerc.innerText = e.data.mentions.tweetsWithCount / e.data.tweetCount;
+        eEmojiPerc.innerText = e.data.emojis.tweetsWithCount / e.data.tweetCount * 100.0;
+        eUrlPerc.innerText = e.data.urls.tweetsWithCount / e.data.tweetCount * 100.0;
+        ePicPerc.innerText = e.data.images.tweetsWithCount / e.data.tweetCount * 100.0;
+        eHtPerc.innerText = e.data.hashTags.tweetsWithCount / e.data.tweetCount * 100.0;
+        eMentionPerc.innerText = e.data.mentions.tweetsWithCount / e.data.tweetCount * 100.0;
 
         const topDomains = e.data.urls.entityTexts;
         let domainHtml = '';
