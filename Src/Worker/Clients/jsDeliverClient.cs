@@ -17,13 +17,13 @@ namespace Worker.Clients
 
         private readonly ILogger<JsDeliverClient> logger;
         private readonly IOptions<EmojiClientOptions> options;
-        private readonly IHttpClientFactory httpClientFactory;
+        private readonly HttpClient baseClient;
 
-        public JsDeliverClient(IHttpClientFactory httpClientFactory, IOptions<EmojiClientOptions> options, ILogger<JsDeliverClient> logger)
+        public JsDeliverClient(HttpClient baseClient, IOptions<EmojiClientOptions> options, ILogger<JsDeliverClient> logger)
         {
             this.logger = logger;
             this.options = options;
-            this.httpClientFactory = httpClientFactory;
+            this.baseClient = baseClient;
         }
 
         /// <summary>
@@ -34,8 +34,6 @@ namespace Worker.Clients
         public async Task<EmojiMasterList> DownloadEmojisAsync(CancellationToken cancellationToken = default)
         {
             string resource = options?.Value?.Resource ?? PRIMARY_RESOURCE;
-
-            using var baseClient = httpClientFactory.CreateClient();
 
             //  If we didn't get a client with a base address, use our primary host
             baseClient.BaseAddress ??= new Uri(options?.Value?.Host ?? PRIMARY_HOST);

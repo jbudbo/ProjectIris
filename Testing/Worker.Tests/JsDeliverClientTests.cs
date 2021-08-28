@@ -34,9 +34,9 @@ public class JsDeliverClientTests
                 Content = new StringContent(Encoding.UTF8.GetString(emojiBuffer))
             });
 
-        mFactory.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(new HttpClient(handler.Object));
+        HttpClient client = new (handler.Object);
 
-        var target = new JsDeliverClient(mFactory.Object, mOptions, mLogger);
+        var target = new JsDeliverClient(client, mOptions, mLogger);
         var source = new CancellationTokenSource();
 
         EmojiMasterList list = await target.DownloadEmojisAsync(source.Token);
@@ -70,9 +70,9 @@ public class JsDeliverClientTests
                 Content = new StringContent(string.Empty)
             });
 
-        mFactory.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(new HttpClient(handler.Object));
+        HttpClient client = new (handler.Object);
 
-        var target = new JsDeliverClient(mFactory.Object, mOptions, mLogger);
+        var target = new JsDeliverClient(client, mOptions, mLogger);
         var source = new CancellationTokenSource();
 
         EmojiMasterList list = await target.DownloadEmojisAsync(source.Token);

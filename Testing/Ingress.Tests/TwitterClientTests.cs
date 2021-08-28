@@ -30,9 +30,9 @@ public class TwitterClientTests
                 Content = new StringContent("MOCK")
             });
 
-        mFactory.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(new HttpClient(handler.Object));
+        HttpClient client = new (handler.Object);
 
-        var target = new TwitterClient(mFactory.Object, mLogger, mOptions);
+        var target = new TwitterClient(client, mLogger, mOptions);
         var source = new CancellationTokenSource();
 
         bool pass = false;
@@ -55,8 +55,6 @@ public class TwitterClientTests
         var mLogger = Mock.Of<ILogger<TwitterClient>>();
         var mOptions = Mock.Of<IOptions<TwitterOptions>>();
 
-        var mFactory = new Mock<IHttpClientFactory>();
-
         var handler = new Mock<HttpMessageHandler>();
         handler.Protected()
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
@@ -66,9 +64,9 @@ public class TwitterClientTests
                 Content = new StringContent("MOCK")
             });
 
-        mFactory.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(new HttpClient(handler.Object));
+        HttpClient client = new (handler.Object);
 
-        var target = new TwitterClient(mFactory.Object, mLogger, mOptions);
+        var target = new TwitterClient(client, mLogger, mOptions);
         var source = new CancellationTokenSource();
 
         bool pass = false;

@@ -78,7 +78,6 @@ namespace Dashboard.Tests
 
             Assert.False(pass);
             mRedis.Verify(r => r.GetDatabase(It.IsAny<int>(), It.IsAny<object>()), Times.Once());
-            Assert.NotEqual(0, ms.Length);
         }
     }
 }

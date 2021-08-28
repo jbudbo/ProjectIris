@@ -11,13 +11,13 @@ namespace Ingress.Clients
     {
         private readonly ILogger<TwitterClient> logger;
         private readonly IOptions<TwitterOptions> options;
-        private readonly IHttpClientFactory httpClientFactory;
+        private readonly HttpClient baseClient;
 
-        public TwitterClient(IHttpClientFactory httpClientFactory, ILogger<TwitterClient> logger, IOptions<TwitterOptions> options)
+        public TwitterClient(HttpClient baseClient, ILogger<TwitterClient> logger, IOptions<TwitterOptions> options)
         {
             this.logger = logger;
             this.options = options;
-            this.httpClientFactory = httpClientFactory;
+            this.baseClient = baseClient;
         }
 
         public async Task StartAsync(Uri uri, Func<string, Task> OnTweet, CancellationToken cancellationToken)
@@ -40,7 +40,6 @@ namespace Ingress.Clients
                     Query = string.Join('&', queryParams.Select(p => $"{p.Key}={p.Value}"))
                 };
 
-                using HttpClient baseClient = httpClientFactory.CreateClient();
                 using HttpResponseMessage response = await baseClient.GetAsync(builder.Uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                     .ConfigureAwait(false);
 
