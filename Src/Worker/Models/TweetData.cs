@@ -1,4 +1,6 @@
-﻿namespace Worker.Models
+﻿using System;
+
+namespace Worker.Models
 {
     /// <summary>
     /// A Tweet from Twitter consisting of <see cref="TweetData"/>

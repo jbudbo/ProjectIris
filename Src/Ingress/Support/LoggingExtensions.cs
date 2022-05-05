@@ -1,4 +1,6 @@
-﻿namespace Microsoft.Extensions.Logging
+﻿using System;
+
+namespace Microsoft.Extensions.Logging
 {
     internal static partial class LoggerExtensions
     {

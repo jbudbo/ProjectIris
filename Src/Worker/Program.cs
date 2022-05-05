@@ -10,6 +10,7 @@ namespace Worker
 {
     using Clients;
     using Support;
+    using System.Threading.Tasks;
 
     sealed class Program
     {

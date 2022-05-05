@@ -1,4 +1,7 @@
-﻿namespace Ingress.Models
+﻿using System;
+using System.Collections.Generic;
+
+namespace Ingress.Models
 {
     /// <summary>
     /// Options for configuring out we interact with the Twitter API

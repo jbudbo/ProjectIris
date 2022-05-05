@@ -13,13 +13,18 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dashboard", "Dashboard\Dash
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CommonLogic", "CommonLogic\CommonLogic.shproj", "{FC927D17-BB48-44D6-BC96-77ACDCDB68FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ingress.Tests", "..\Testing\Ingress.Tests\Ingress.Tests.csproj", "{C1C0B8C4-952C-46E5-8F80-AE249C3B2FDB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ingress.Tests", "..\Testing\Ingress.Tests\Ingress.Tests.csproj", "{C1C0B8C4-952C-46E5-8F80-AE249C3B2FDB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Worker.Tests", "..\Testing\Worker.Tests\Worker.Tests.csproj", "{A073253C-702B-4739-A8D7-0243C4209537}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Worker.Tests", "..\Testing\Worker.Tests\Worker.Tests.csproj", "{A073253C-702B-4739-A8D7-0243C4209537}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonLogic.Tests", "..\Testing\CommonLogic.Tests\CommonLogic.Tests.csproj", "{B456111D-1281-4677-A92F-7F35BB34356C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonLogic.Tests", "..\Testing\CommonLogic.Tests\CommonLogic.Tests.csproj", "{B456111D-1281-4677-A92F-7F35BB34356C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dashboard.Tests", "..\Testing\Dashboard.Tests\Dashboard.Tests.csproj", "{4B0EFA5C-C506-4564-9119-D540C845FF53}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dashboard.Tests", "..\Testing\Dashboard.Tests\Dashboard.Tests.csproj", "{4B0EFA5C-C506-4564-9119-D540C845FF53}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "snlFiles", "snlFiles", "{EE350ADE-9DD1-4A80-8CAE-09980A5FEC9F}"
+	ProjectSection(SolutionItems) = preProject
+		twitter.json = twitter.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

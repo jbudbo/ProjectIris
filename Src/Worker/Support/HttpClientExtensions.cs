@@ -4,6 +4,7 @@ using Worker.Models;
 namespace Microsoft.Extensions.DependencyInjection
 {
     using Configuration;
+    using System;
 
     /// <summary>
     /// Extensions for the <see cref="IServiceCollection"/> interface

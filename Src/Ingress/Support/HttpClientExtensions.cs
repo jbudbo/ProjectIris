@@ -3,7 +3,8 @@ using Ingress.Interfaces;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-    using Configuration;    
+    using Configuration;
+    using System;
 
     internal static class HttpClientExtensions
     {

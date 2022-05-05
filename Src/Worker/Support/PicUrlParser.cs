@@ -1,4 +1,6 @@
-﻿namespace Worker.Support
+﻿using System;
+
+namespace Worker.Support
 {
     /// <summary>
     /// Acts as a means of transforming any Relative Picture Uris into Absolute ones

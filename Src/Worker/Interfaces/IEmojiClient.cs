@@ -1,6 +1,8 @@
 ﻿namespace Worker.Interfaces
 {
     using Models;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// An HTTP Client used to download and provide an <see cref="EmojiMasterList"/>

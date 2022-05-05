@@ -6,6 +6,11 @@ namespace Worker.Clients
 {
     using Interfaces;
     using Models;
+    using System;
+    using System.IO;
+    using System.Net.Http;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// An emoji client targeted towards the jsDeliver CDN

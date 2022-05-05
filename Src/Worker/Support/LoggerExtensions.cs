@@ -1,4 +1,5 @@
 ﻿using StackExchange.Redis;
+using System;
 
 namespace Microsoft.Extensions.Logging
 {
