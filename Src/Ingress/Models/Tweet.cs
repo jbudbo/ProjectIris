@@ -5,6 +5,21 @@ using System.Text.Json.Serialization;
 
 namespace Ingress.Models;
 
+public struct TweetUrl
+{
+    public uint start { get; set; }
+    public uint end { get; set; }
+    public string url { get; set; }
+    public string expanded_url { get; set; }
+    public string display_url { get; set; }
+}
+public struct TweetHashtag
+{
+    public uint start { get; set; }
+    public uint end { get; set; }
+    public string tag { get; set; }
+}
+
 public struct TweetAnnotation
 {
     public uint start { get; set; }
@@ -26,6 +41,8 @@ public struct TweetEntity
 {
     public IEnumerable<TweetAnnotation> annotations { get; set; }
     public IEnumerable<TweetMention> mentions { get; set; }
+    public IEnumerable<TweetHashtag> hastags{ get; set; }
+    public IEnumerable<TweetUrl> urls { get; set; }
 }
 
 internal struct Tweet
