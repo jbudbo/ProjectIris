@@ -2,42 +2,70 @@ version: '3.8'
 
 services:
 
-    redis:
-        image: redis:alpine
+    zookeeper:
+        image: confluentinc/cp-zookeeper:latest
         networks:
             - Iris
-        ports:    # Uncomment this line to expose the redis port (not necessary or recommended)
-            - 6379:6379   # Uncomment this line to expose the redis port (not necessary or recommended)
-        healthcheck:
-          test: ["CMD", "redis-cli", "ping"]
-          interval: 1s
-          timeout: 3s
-          retries: 30
-
-    redisinsight:
-        image: redislabs/redisinsight:latest
-        networks:
-            - Iris
-        ports:
-            - 8091:8001
-        depends_on:
-            redis:
-                condition: service_healthy
-
-    worker:
-        image: ${DOCKER_REGISTRY-}worker
-        build:
-            context: .
-            dockerfile: Worker/Dockerfile
-        deploy:
-            replicas: 1
-        depends_on:
-            redis:
-                condition: service_healthy
         environment:
-            IRIS_REDIS_HOST: "redis"
+          ZOOKEEPER_CLIENT_PORT: 2181
+          ZOOKEEPER_TICK_TIME: 2000
+
+    control-center:
+        image: confluentinc/cp-enterprise-control-center:latest
         networks:
             - Iris
+        depends_on:
+            - broker
+        ports:
+            - "9021:9021"
+        environment:
+            CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:29092'
+            CONTROL_CENTER_REPLICATION_FACTOR: 1
+            CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+            CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+            CONFLUENT_METRICS_TOPIC_REPLICATION: 1
+            PORT: 9021      
+    broker:
+        image: confluentinc/cp-server:latest
+        networks:
+            - Iris
+        depends_on:
+            - zookeeper
+        ports:
+            - "29092:29092"
+        environment:
+          KAFKA_BROKER_ID: 1
+          KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+          KAFKA_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://broker:9092
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+          KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+          KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_JMX_PORT: 9101
+          CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker:29092
+          CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+          CONFLUENT_METRICS_ENABLE: 'true'
+          CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+
+    #worker:
+    #    image: ${DOCKER_REGISTRY-}worker
+    #    build:
+    #        context: .
+    #        dockerfile: Worker/Dockerfile
+    #    deploy:
+    #        replicas: 1
+    #    depends_on:
+    #        redis:
+    #            condition: service_healthy
+    #    environment:
+    #        IRIS_REDIS_HOST: "redis"
+    #    networks:
+    #        - Iris
 
     ingress:
         image: ${DOCKER_REGISTRY-}ingress
@@ -45,32 +73,35 @@ services:
             context: .
             dockerfile: Ingress/Dockerfile
         secrets:
-            - source: twitter_bearer
-              target: /app/twitter.json
+            - twitter_bearer
         depends_on:
-            redis:
-                condition: service_healthy
+            - broker
         networks:
             - Iris
         environment:
-            IRIS_TWITTER_ENDPOINT: "/2/tweets/sample/stream"
-            IRIS_REDIS_HOST: "redis"
+            TWITTER__Endpoint: "/2/tweets/sample/stream"
+            TWITTER__Base: "https://api.twitter.com"
+            IRIS__Sink: "Tweets"
+            KAFKA__ClientId: "Ingress"
+            KAFKA__GroupId: "Iris"
+            KAFKA__BootstrapServers: "broker:29092"
+            KAFKA__SecurityProtocol: "PlainText"
 
-    dashboard:
-        image: ${DOCKER_REGISTRY-}dashboard
-        build:
-            context: .
-            dockerfile: Dashboard/Dockerfile
-        depends_on:
-            redis:
-                condition: service_healthy
-        ports:
-            - 8080:80
-            - 8443:443
-        environment:
-            IRIS_REDIS_HOST: "redis"
-        networks:
-            - Iris
+    #dashboard:
+    #    image: ${DOCKER_REGISTRY-}dashboard
+    #    build:
+    #        context: .
+    #        dockerfile: Dashboard/Dockerfile
+    #    depends_on:
+    #        redis:
+    #            condition: service_healthy
+    #    ports:
+    #        - 8080:80
+    #        - 8443:443
+    #    environment:
+    #        IRIS_REDIS_HOST: "redis"
+    #    networks:
+    #        - Iris
     
 secrets:
     twitter_bearer:

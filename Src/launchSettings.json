@@ -8,10 +8,10 @@
       "commandVersion": "1.0",
       "serviceActions": {
         "ingress": "StartWithoutDebugging",
-        "redis": "StartWithoutDebugging",
-        "redisinsight": "StartWithoutDebugging",
-        "worker": "StartWithoutDebugging",
-        "dashboard": "StartDebugging"
+        //"redis": "StartWithoutDebugging",
+        //"redisinsight": "StartWithoutDebugging",
+        //"worker": "StartWithoutDebugging",
+        //"dashboard": "StartDebugging"
       }
     }
   }

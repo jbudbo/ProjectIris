@@ -17,14 +17,14 @@ namespace StackExchange.Redis
         /// <returns></returns>
         internal static IServiceCollection AddRedis(this IServiceCollection services, IConfiguration config)
         {
-            services.AddOptions<RedisOptions>()
-                .Configure(o => o.Host = config["IRIS_REDIS_HOST"]);
+            //services.AddOptions<RedisOptions>()
+            //    .Configure(o => o.Host = config["IRIS_REDIS_HOST"]);
 
-            return services.AddSingleton<IConnectionMultiplexer>(sp =>
-            {
-                var opts = sp.GetRequiredService<IOptions<RedisOptions>>();
-                return ConnectionMultiplexer.Connect(string.Join(',', opts.Value.Host?.Trim(), "localhost"));
-            });
+            return services;//.AddSingleton<IConnectionMultiplexer>(sp =>
+            //{
+            //    var opts = sp.GetRequiredService<IOptions<RedisOptions>>();
+            //    return ConnectionMultiplexer.Connect(string.Join(',', opts.Value.Host?.Trim(), "localhost"));
+            //});
         }
     }
 }

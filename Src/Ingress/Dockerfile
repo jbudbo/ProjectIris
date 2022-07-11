@@ -1,20 +1,17 @@
-#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-FROM mcr.microsoft.com/dotnet/runtime:6.0 AS base
-WORKDIR /app
-
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS publish
 WORKDIR /src
 COPY ["Ingress/Ingress.csproj", "Ingress/"]
 RUN dotnet restore "Ingress/Ingress.csproj"
 COPY . .
 WORKDIR "/src/Ingress"
-RUN dotnet build "Ingress.csproj" -c Release -o /app/build
 
-FROM build AS publish
-RUN dotnet publish "Ingress.csproj" -c Release -o /app/publish
+RUN dotnet publish "Ingress.csproj" -c Release -o /app/publish --self-contained -r linux-x64
 
-FROM base AS final
+#FROM mcr.microsoft.com/dotnet/runtime:6.0
+FROM mcr.microsoft.com/dotnet/runtime-deps:6.0.6-cbl-mariner2.0-distroless-amd64
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Ingress.dll"]
+ENV PATH=/app:$PATH
+USER nobody
+
+ENTRYPOINT ["Ingress"]

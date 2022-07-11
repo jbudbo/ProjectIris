@@ -1,79 +1,97 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Confluent.Kafka;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using StackExchange.Redis;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
-namespace Ingress
+namespace Ingress;
+
+using Interfaces;
+using Models;
+
+/// <summary>
+/// A hosted service designed to intake Tweet data as fast and efficiently as possible
+/// </summary>
+internal class IngressWorker : BackgroundService
 {
-    using Interfaces;
-    using Models;
-    using System;
-    using System.Threading;
-    using System.Threading.Tasks;
+    private readonly ILogger<IngressWorker> logger;
+    private readonly ITwitterClient client;
+    private readonly IProducer<string, Tweet> producer;
+    private readonly string topic;
 
-    /// <summary>
-    /// A hosted service designed to intake Tweet data as fast and efficiently as possible
-    /// </summary>
-    internal class IngressWorker : IHostedService
+    public IngressWorker(
+        ILogger<IngressWorker> logger, 
+        ITwitterClient client,
+        IProducer<string, Tweet> producer,
+        IOptionsSnapshot<IrisOptions> options)
     {
-        private readonly ILogger<IngressWorker> logger;
-        private readonly ITwitterClient client;
-        private readonly IOptions<TwitterOptions> options;
-        private readonly IConnectionMultiplexer redis;
+        this.logger = logger;
+        this.client = client;
+        this.producer = producer;
+        topic = options.Value.Sink;
+    }
 
-        public IngressWorker(
-            ILogger<IngressWorker> logger, 
-            IOptions<TwitterOptions> options,
-            IConnectionMultiplexer redis,
-            ITwitterClient client)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        static IEnumerable<string> generateTweetsForever(StreamReader reader)
         {
-            this.logger = logger;
-            this.client = client;
-            this.options = options;
-            this.redis = redis;
+            while (!reader.EndOfStream)
+            {
+                yield return reader.ReadLine();
+            }
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        var edbo = new ExecutionDataflowBlockOptions
         {
-            logger.Startup(nameof(Ingress));
+            CancellationToken = stoppingToken,
+            SingleProducerConstrained = true,
+            EnsureOrdered = false,
+            MaxDegreeOfParallelism = Environment.ProcessorCount
+        };
+        var x = new TransformManyBlock<StreamReader, string>(generateTweetsForever, edbo);
 
-            IDatabase db = redis.GetDatabase();
+        var y = new TransformBlock<string, Message<string, Tweet>>(static t =>
+        {
+            if (string.IsNullOrWhiteSpace(t))
+                return null;
 
-            //  Mark the time of our first tweet so we can calculate rolling averages 
-            await db.StringSetAsync("tweetStart", DateTime.UtcNow.Ticks, flags: CommandFlags.FireAndForget)
+            var tweet = JsonSerializer.Deserialize(t, TweetDataJsonContext.Default.TweetData);
+            return new Message<string, Tweet>
+            {
+                Key = tweet.data.id,
+                Value = tweet.data
+            };
+        }, edbo);
+
+        var z = new ActionBlock<Message<string, Tweet>>(T =>
+        {
+            if (T is null) return;
+
+            producer.Produce(topic, T);
+        }, edbo);
+
+        var dlo = new DataflowLinkOptions
+        {
+            PropagateCompletion = true
+        };
+
+        using var linkY = x.LinkTo(y, dlo);
+        using var linkZ = y.LinkTo(z, dlo);
+
+        using var reader = await client.GetReaderAsync(stoppingToken)
                 .ConfigureAwait(false);
 
-            try
-            {
-                var startAsync = client.StartAsync(options?.Value?.ApiUrl, cancellationToken)
-                    .ConfigureAwait(false);
+        if (reader is null)
+            return;
 
-                await foreach (var tweet in client.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
-                {
-                    logger.TweetReceived(tweet);
+        x.Post(reader);
 
-                    //  Increment our tweet count so that we can determine input performance as needed
-                    await db.StringIncrementAsync("tweetCount", flags: CommandFlags.FireAndForget)
-                        .ConfigureAwait(false);
-
-                    //  Don't even bother serializing that way we can hoover as much data as possible
-                    await db.ListLeftPushAsync("tweets", tweet, flags: CommandFlags.FireAndForget)
-                        .ConfigureAwait(false);
-                }
-
-                await startAsync;
-            }
-            catch (TaskCanceledException)
-            {
-                logger.CancelRequest();
-            }
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            logger.Shutdown(nameof(IngressWorker));
-
-            return Task.CompletedTask;
-        }
+        stoppingToken.WaitHandle.WaitOne();
     }
 }

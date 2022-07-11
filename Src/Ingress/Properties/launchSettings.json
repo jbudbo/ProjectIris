@@ -3,9 +3,18 @@
     "Ingress": {
       "commandName": "Project",
       "environmentVariables": {
-        "IRIS_TWITTER_ENDPOINT": "/2/tweets/sample/stream",
-        "IRIS_TWITTER_BEARER": "AAAAAAAAAAAAAAAAAAAAAAeUSQEAAAAAfyU8m3WC6IWO4dqWdDb8Fq%2B%2BsYM%3Dq16C2cRnTv6buE2T6yhmmfcpXUuDuckYETiAof6sCietMxm0Vk",
-        "NETCORE_ENVIRONMENT": "Development"
+        "TWITTER__ENDPOINT": "/2/tweets/sample/stream",
+        "TWITTER__BASE": "https://api.twitter.com",
+
+        "IRIS__SINK": "Tweets",
+
+        "NETCORE__ENVIRONMENT": "Development",
+        
+        "KAFKA__SaslMechanism": "PLAIN",
+        "KAFKA__ClientId": "Ingress",
+        "KAFKA__BootstrapServers": "localhost:9092",
+        "KAFKA__SecurityProtocol": "PlainText",
+        "KAKFA__GroupId": "Iris"
       }
     },
     "Docker": {

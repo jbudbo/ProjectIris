@@ -1,0 +1,59 @@
+﻿using Confluent.Kafka;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace Ingress.Models;
+
+public struct TweetAnnotation
+{
+    public uint start { get; set; }
+    public uint end { get; set; }
+    public decimal probability { get; set; }
+    public string type { get; set; }
+    public string normalized_text { get; set; }
+}
+
+public struct TweetMention
+{
+    public uint start { get; set; }
+    public uint end { get; set; }
+    public string username { get; set; }
+    public string id { get; set; }
+}
+
+public struct TweetEntity
+{
+    public IEnumerable<TweetAnnotation> annotations { get; set; }
+    public IEnumerable<TweetMention> mentions { get; set; }
+}
+
+internal struct Tweet
+{
+    public string id { get; set; }
+    public string text { get; set; }
+    public TweetEntity entities { get; set; }
+}
+
+[JsonSerializable(typeof(Tweet))]
+internal sealed partial class TweetJsonContext : JsonSerializerContext { }
+
+internal sealed class TweetJsonSerDe : ISerializer<Tweet>
+{
+    public byte[] Serialize(Tweet data, SerializationContext context)
+        => JsonSerializer.SerializeToUtf8Bytes(data, TweetJsonContext.Default.Tweet);
+}
+
+internal struct TweetData
+{
+    public Tweet data { get; set; }
+}
+
+[JsonSerializable(typeof(TweetData))]
+internal sealed partial class TweetDataJsonContext : JsonSerializerContext { }
+
+internal sealed class TweetDataJsonSerDe : ISerializer<TweetData>
+{
+    public byte[] Serialize(TweetData data, SerializationContext context)
+        => JsonSerializer.SerializeToUtf8Bytes(data, TweetDataJsonContext.Default.TweetData);
+}

@@ -17,10 +17,10 @@ internal sealed class ServerSentEventsMiddleware
     private readonly RequestDelegate next;
     private readonly IConnectionMultiplexer redis;
 
-    public ServerSentEventsMiddleware(RequestDelegate next, IConnectionMultiplexer redis)
+    public ServerSentEventsMiddleware(RequestDelegate next)//, IConnectionMultiplexer redis)
     {
         this.next = next;
-        this.redis = redis;
+        //this.redis = redis;
     }
 
     /// <summary>
@@ -37,14 +37,6 @@ internal sealed class ServerSentEventsMiddleware
         }
 
         CancellationToken token = context.RequestAborted;
-        IDatabase db = redis.GetDatabase();
-
-        var tweetStart = await db.StringGetAsync("tweetStart")
-            .ConfigureAwait(false);
-
-        var ticksSinceStart = tweetStart.TryParse(out long ticks) ? ticks : 0;
-
-        DateTime timeOfweetStart = new(ticksSinceStart, DateTimeKind.Utc);
 
         try
         {
@@ -56,37 +48,37 @@ internal sealed class ServerSentEventsMiddleware
             ulong msgId = 0;
             while (!token.IsCancellationRequested)
             {
-                TimeSpan secondsSinceStart = DateTime.UtcNow - timeOfweetStart;
+                //TimeSpan secondsSinceStart = DateTime.UtcNow - timeOfweetStart;
 
-                ITransaction transaction = db.CreateTransaction();
+                //ITransaction transaction = db.CreateTransaction();
 
-                var tweetCountTask = transaction.StringGetAsync("tweetCount");
+                //var tweetCountTask = transaction.StringGetAsync("tweetCount");
 
-                var urlsTask = GetTweetDataAsync(transaction, "urls");
-                var imagesTask = GetTweetDataAsync(transaction, "images");
-                var emojisTask = GetTweetDataAsync(transaction, "emojis");
-                var hashTagsTask = GetTweetDataAsync(transaction, "hashTags", Format: "<a href=\"https://twitter.com/hashtag/{0}\" target=\"_blank\">{0}</a> ({1}%)");
-                var mentionsTask = GetTweetDataAsync(transaction, "mentions", Format: "<a href=\"https://twitter.com/{0}\" target=\"_blank\">{0}</a> ({1}%)");
+                //var urlsTask = GetTweetDataAsync(transaction, "urls");
+                //var imagesTask = GetTweetDataAsync(transaction, "images");
+                //var emojisTask = GetTweetDataAsync(transaction, "emojis");
+                //var hashTagsTask = GetTweetDataAsync(transaction, "hashTags", Format: "<a href=\"https://twitter.com/hashtag/{0}\" target=\"_blank\">{0}</a> ({1}%)");
+                //var mentionsTask = GetTweetDataAsync(transaction, "mentions", Format: "<a href=\"https://twitter.com/{0}\" target=\"_blank\">{0}</a> ({1}%)");
 
-                await Task.WhenAll(tweetCountTask, urlsTask, imagesTask, emojisTask, hashTagsTask, mentionsTask, transaction.ExecuteAsync())
-                    .ConfigureAwait(false);
+                //await Task.WhenAll(tweetCountTask, urlsTask, imagesTask, emojisTask, hashTagsTask, mentionsTask, transaction.ExecuteAsync())
+                //    .ConfigureAwait(false);
 
-                double tweetCount = double.TryParse(tweetCountTask.GetAwaiter().GetResult(), out double tc) ? tc : 0;
+                //double tweetCount = double.TryParse(tweetCountTask.GetAwaiter().GetResult(), out double tc) ? tc : 0;
 
-                IDictionary<string, object> result = new Dictionary<string, object>
-                {
-                    [nameof(tweetCount)] = tweetCount,
-                    ["tps"] = tweetCount / secondsSinceStart.TotalSeconds,
-                    ["urls"] = urlsTask.GetAwaiter().GetResult(),
-                    ["images"] = imagesTask.GetAwaiter().GetResult(),
-                    ["emojis"] = emojisTask.GetAwaiter().GetResult(),
-                    ["hashTags"] = hashTagsTask.GetAwaiter().GetResult(),
-                    ["mentions"] = mentionsTask.GetAwaiter().GetResult(),
-                };
+                //IDictionary<string, object> result = new Dictionary<string, object>
+                //{
+                //    [nameof(tweetCount)] = tweetCount,
+                //    ["tps"] = tweetCount / secondsSinceStart.TotalSeconds,
+                //    ["urls"] = urlsTask.GetAwaiter().GetResult(),
+                //    ["images"] = imagesTask.GetAwaiter().GetResult(),
+                //    ["emojis"] = emojisTask.GetAwaiter().GetResult(),
+                //    ["hashTags"] = hashTagsTask.GetAwaiter().GetResult(),
+                //    ["mentions"] = mentionsTask.GetAwaiter().GetResult(),
+                //};
 
-                msgId = await WriteAndIncrementIdAsync(response, msgId, token).ConfigureAwait(false);
-                await WriteTweetEventAsync(response, token).ConfigureAwait(false);
-                await WriteTweetDataAsync(response, result, token).ConfigureAwait(false);
+                //msgId = await WriteAndIncrementIdAsync(response, msgId, token).ConfigureAwait(false);
+                //await WriteTweetEventAsync(response, token).ConfigureAwait(false);
+                //await WriteTweetDataAsync(response, result, token).ConfigureAwait(false);
             }
         }
         catch (TaskCanceledException) { }
