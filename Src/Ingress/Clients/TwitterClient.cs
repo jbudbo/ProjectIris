@@ -52,26 +52,20 @@ internal sealed class TwitterClient : ITwitterClient, IDisposable
 
     private async Task InitPipeReaderAsync(CancellationToken cancellationToken)
     {
-        //const string FIELDS_KEY = "tweet.fields";
-        //const string MEDIA_KEY = "media.fields";
+        const string FIELDS_KEY = "tweet.fields";
+        const string MEDIA_KEY = "media.fields";
 
         try
         {
-            //var queryParams = options?.ApiParameters ?? new Dictionary<string, string>();
+            var queryParams = new Dictionary<string, string>
+            {
+                [FIELDS_KEY] = "entities",
+                [MEDIA_KEY] = "type,url"
+            };
 
-            //if (!queryParams.ContainsKey(FIELDS_KEY))
-            //    queryParams[FIELDS_KEY] = "entities";
+            string path = $"{options.Endpoint}?{string.Join('&', queryParams.Select(p => $"{p.Key}={p.Value}"))}";
 
-            //if (!queryParams.ContainsKey(MEDIA_KEY))
-            //    queryParams[MEDIA_KEY] = "type,url";
-
-            //UriBuilder builder = new(options.)
-            //{
-            //    Path = uri?.OriginalString ?? options?.ApiUrl?.OriginalString,
-            //    Query = string.Join('&', queryParams.Select(p => $"{p.Key}={p.Value}"))
-            //};
-
-            responseMessage = await baseClient.GetAsync(options.Endpoint, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+            responseMessage = await baseClient.GetAsync(path, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                 .ConfigureAwait(false);
 
             if (!responseMessage.IsSuccessStatusCode)

@@ -48,8 +48,9 @@ sealed class Program
     /// <param name="configurationBuilder"></param>
     private static void SetupConfigurationElements(HostBuilderContext builderContext, IConfigurationBuilder configurationBuilder)
     {
-        if (builderContext.HostingEnvironment.IsDevelopment())
-            configurationBuilder.AddUserSecrets<Program>();
+#if DEBUG
+        configurationBuilder.AddUserSecrets<Program>();
+#endif
 
         configurationBuilder
             .AddJsonFile("/run/secrets/twitter_bearer", true)

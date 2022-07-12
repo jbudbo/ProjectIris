@@ -8,11 +8,11 @@
 
         "IRIS__SINK": "Tweets",
 
-        "NETCORE__ENVIRONMENT": "Development",
-        
+        "NETCORE_ENVIRONMENT": "Development",
+
         "KAFKA__SaslMechanism": "PLAIN",
         "KAFKA__ClientId": "Ingress",
-        "KAFKA__BootstrapServers": "localhost:9092",
+        "KAFKA__BootstrapServers": "localhost:29092",
         "KAFKA__SecurityProtocol": "PlainText",
         "KAKFA__GroupId": "Iris"
       }

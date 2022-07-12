@@ -41,7 +41,7 @@ public struct TweetEntity
 {
     public IEnumerable<TweetAnnotation> annotations { get; set; }
     public IEnumerable<TweetMention> mentions { get; set; }
-    public IEnumerable<TweetHashtag> hastags{ get; set; }
+    public IEnumerable<TweetHashtag> hashtags{ get; set; }
     public IEnumerable<TweetUrl> urls { get; set; }
 }
 
