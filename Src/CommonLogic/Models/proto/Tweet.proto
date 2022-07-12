@@ -1,0 +1,48 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "Iris.Proto";
+option optimize_for = SPEED;
+
+package Iris;
+
+message Tweet {
+	string id = 1;
+	string text = 2;
+	Entity entities = 3;
+}
+
+message Entity {
+	repeated AnnotationEntity annotations = 1;
+	repeated MentionEntity mentions = 2;
+	repeated HashTagEntity hashtags = 3;
+	repeated UrlEntity urls = 4;
+}
+
+message AnnotationEntity {
+	uint32 start = 1;
+	uint32 end = 2;
+	float probability = 3;
+	string type = 4;
+	string normalized_text = 5;
+}
+
+message MentionEntity {
+	uint32 start = 1;
+	uint32 end = 2;
+	string username = 3;
+	string id = 4;
+}
+
+message HashTagEntity {
+	uint32 start = 1;
+	uint32 end = 2;
+	string tag = 3;
+}
+
+message UrlEntity {
+	uint32 start = 1;
+	uint32 end = 2;
+	string url = 3;
+	string expanded_url = 4;
+	string display_url = 5;
+}

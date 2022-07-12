@@ -1,4 +1,6 @@
 ﻿using Confluent.Kafka;
+using Google.Protobuf;
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -24,7 +26,7 @@ public struct TweetAnnotation
 {
     public uint start { get; set; }
     public uint end { get; set; }
-    public decimal probability { get; set; }
+    public float probability { get; set; }
     public string type { get; set; }
     public string normalized_text { get; set; }
 }
@@ -41,11 +43,11 @@ public struct TweetEntity
 {
     public IEnumerable<TweetAnnotation> annotations { get; set; }
     public IEnumerable<TweetMention> mentions { get; set; }
-    public IEnumerable<TweetHashtag> hashtags{ get; set; }
+    public IEnumerable<TweetHashtag> hashtags { get; set; }
     public IEnumerable<TweetUrl> urls { get; set; }
 }
 
-internal struct Tweet
+public struct Tweet
 {
     public string id { get; set; }
     public string text { get; set; }
@@ -73,4 +75,14 @@ internal sealed class TweetDataJsonSerDe : ISerializer<TweetData>
 {
     public byte[] Serialize(TweetData data, SerializationContext context)
         => JsonSerializer.SerializeToUtf8Bytes(data, TweetDataJsonContext.Default.TweetData);
+}
+
+internal sealed class TweetProtoSerDe : ISerializer<Iris.Proto.Tweet>
+{
+    public byte[] Serialize(Iris.Proto.Tweet data, SerializationContext context)
+    {
+        Span<byte> buffer = stackalloc byte[data.CalculateSize()];
+        data.WriteTo(buffer);
+        return buffer.ToArray();
+    }
 }

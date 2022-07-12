@@ -351,3 +351,5 @@ MigrationBackup/
 /Src/twitter_bearer.txt
 /Src/twitter.json
 /Src/Ingress/twitter.json
+/Src/CommonLogic/Models/proto/cs
+/Src/CommonLogic/Models/proto/java/Iris
