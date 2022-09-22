@@ -69,3 +69,7 @@ and watch the streaming Twitter goodness.
 ## Arts and Crafts
 
 ![System Landscape](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-SystemLandscape.puml "Landscape")
+
+![Emoji System Context](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-iamcalemojidata-SystemContext.puml "Emoji System Context")
+
+![Emoji Container](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-iamcalemojidata-Container.puml)
