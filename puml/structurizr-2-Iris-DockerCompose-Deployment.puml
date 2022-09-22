@@ -1,0 +1,23 @@
+@startuml
+title Iris - Deployment - Docker Compose
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+
+Deployment_Node(DockerCompose.LocalDockerCompose, "Local Docker Compose", "Docker", $tags="") {
+  Deployment_Node(DockerCompose.LocalDockerCompose.Docker, "Docker", "Docker", "Docker", $tags="")
+  Container(DockerCompose.LocalDockerCompose.Aggregator_1, "Aggregator", "Docker", "The data Aggregator supplying metrics from Twitter Data", $tags="")
+  Container(DockerCompose.LocalDockerCompose.Dashboard_1, "Dashboard", "Docker", "The real time view of the aggregated data", $tags="")
+  Container(DockerCompose.LocalDockerCompose.Ingress_1, "Ingress", "Docker", "The Twitter Data Source", $tags="")
+}
+
+Rel_D(DockerCompose.LocalDockerCompose.Ingress_1, DockerCompose.LocalDockerCompose.Docker, "Hosted", $tags="")
+Rel_D(DockerCompose.LocalDockerCompose.Aggregator_1, DockerCompose.LocalDockerCompose.Docker, "Hosted", $tags="")
+Rel_D(DockerCompose.LocalDockerCompose.Dashboard_1, DockerCompose.LocalDockerCompose.Docker, "Hosted", $tags="")
+
+SHOW_LEGEND()
+@enduml
