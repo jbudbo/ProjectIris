@@ -73,9 +73,9 @@ and watch the streaming Twitter goodness.
 ### Iris
 ![Iris Container](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-Iris-Container.puml "Iris Container")
 
-![Iris Compose](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-Iris-DockerCompose-Deployment.puml" "Iris Deployment")
+![Iris Compose](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-Iris-DockerCompose-Deployment.puml "Iris Deployment")
 
-![Iris Kernel](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-Iris-EventKernel-Component.puml" "Iris Kernel")
+![Iris Kernel](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-Iris-EventKernel-Component.puml "Iris Kernel")
 
 ![Iris Context](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-Iris-SystemContext.puml "Iris System Context")
 
