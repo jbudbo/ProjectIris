@@ -1,0 +1,21 @@
+@startuml
+title iamcal/emoji-data - System Context
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Enterprise_Boundary(enterprise, "Project") {
+  System(Iris, "Iris", "", $tags="")
+}
+
+Boundary(group_2, "Cloud") {
+  System_Ext(iamcalemojidata, "iamcal/emoji-data", "Central Emoji Data and Images", $tags="")[[https://github.com/iamcal/emoji-data]]
+}
+
+
+Rel_D(Iris, iamcalemojidata, "Retrieves latest Emoji Data and Images", $tags="")
+
+SHOW_LEGEND()
+@enduml
