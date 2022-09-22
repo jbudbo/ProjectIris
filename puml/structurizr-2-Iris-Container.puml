@@ -27,7 +27,7 @@ Rel_D(Iris.ControlUI, Iris.EventKernel, "Makes status available", $tags="")
 Rel_D(Iris.Ingress, Iris.EventKernel, "Push", $tags="")
 Rel_D(Iris.EventKernel, Iris.Aggregator, "Poll", $tags="")
 Rel_D(Iris.Aggregator, Iris.EventKernel, "Push", $tags="")
-Rel_D(Iris.EventKernel, Iris.Dashboard, "Poll", $tags="")
+Rel_D(Iris.Dashboard, Iris.EventKernel, "Poll", $tags="")
 
 SHOW_LEGEND()
 @enduml
