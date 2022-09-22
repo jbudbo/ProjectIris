@@ -70,6 +70,15 @@ and watch the streaming Twitter goodness.
 
 ![System Landscape](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-SystemLandscape.puml "Landscape")
 
+### Iris
+![Iris Container](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-Iris-Container.puml "Iris Container)
+
+![Iris Compose](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-Iris-DockerCompose-Deployment.puml" "Iris Deployment")
+
+![Iris Kernel](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-Iris-EventKernel-Component.puml" "Iris Kernel")
+
+![Iris Context](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-Iris-SystemContext.puml "Iris System Context)
+
 ### Emoji
 ![Emoji System Context](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-iamcalemojidata-SystemContext.puml "Emoji System Context")
 
