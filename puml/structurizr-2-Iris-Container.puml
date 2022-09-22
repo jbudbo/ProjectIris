@@ -1,0 +1,33 @@
+@startuml
+title Iris - Containers
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+System_Ext(Twitter, "Twitter", "The Twitter Platform", $tags="")
+System_Ext(iamcalemojidata, "iamcal/emoji-data", "Central Emoji Data and Images", $tags="")[[https://github.com/iamcal/emoji-data]]
+Person(IrisUser, "Iris User", "A user of the Iris Project", $tags="")
+
+System_Boundary("Iris_boundary", "Iris") {
+  Container(Iris.Aggregator, "Aggregator", "Docker", "The data Aggregator supplying metrics from Twitter Data", $tags="")
+  Container(Iris.Dashboard, "Dashboard", "Docker", "The real time view of the aggregated data", $tags="")
+  Container(Iris.ControlUI, "Control UI", "RedisInsight", "A UI for reviewing the state of the Backplain platform", $tags="")[[https://redis.com/redis-enterprise/redis-insight/]]
+  Container(Iris.EventKernel, "Event Kernel", "Redis", "A Backplane to support the Event Based Architecture", $tags="")
+  Container(Iris.Ingress, "Ingress", "Docker", "The Twitter Data Source", $tags="")
+}
+
+Rel_D(Twitter, Iris.Ingress, "Receives data stream", $tags="")
+Rel_D(Iris.Aggregator, iamcalemojidata, "Retrieves latest Emoji Data and Images", $tags="")
+Rel_D(Iris.Dashboard, IrisUser, "Review", "Pushes Real Time Tweet Metrics to User", $tags="")
+Rel_D(Iris.ControlUI, IrisUser, "Review", "Reviews the health of the Event Backplane", $tags="")
+Rel_D(Iris.ControlUI, Iris.EventKernel, "Makes status available", $tags="")
+Rel_D(Iris.Ingress, Iris.EventKernel, "Push", $tags="")
+Rel_D(Iris.EventKernel, Iris.Aggregator, "Poll", $tags="")
+Rel_D(Iris.Aggregator, Iris.EventKernel, "Push", $tags="")
+Rel_D(Iris.EventKernel, Iris.Dashboard, "Poll", $tags="")
+
+SHOW_LEGEND()
+@enduml
