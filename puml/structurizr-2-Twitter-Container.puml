@@ -1,0 +1,19 @@
+@startuml
+title Twitter - Containers
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+System(Iris, "Iris", "", $tags="")
+
+System_Boundary("Twitter_boundary", "Twitter") {
+  Container(Twitter.SampleDataStreamAPI, "Sample Data Stream API", "", $tags="")
+}
+
+Rel_D(Twitter.SampleDataStreamAPI, Iris, "Receives data stream", $tags="")
+
+SHOW_LEGEND()
+@enduml
