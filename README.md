@@ -65,3 +65,7 @@ docker-compose up -d --scale worker=2
 When all services have started and are running, open a browser to 
 [LocalHost:8080](http://localhost:8080) 
 and watch the streaming Twitter goodness.
+
+## Arts and Crafts
+
+![System Landscape](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/jbudbo/ProjectIris/master/puml/structurizr-2-SystemLandscape.puml "Landscape")
