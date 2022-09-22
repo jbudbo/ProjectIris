@@ -1,0 +1,27 @@
+@startuml
+title System Landscape for Project
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Enterprise_Boundary(enterprise, "Project") {
+  Person(IrisUser, "Iris User", "A user of the Iris Project", $tags="")
+  System(Iris, "Iris", "", $tags="")
+}
+
+Boundary(group_0, "Cloud") {
+  System_Ext(Twitter, "Twitter", "The Twitter Platform", $tags="")
+  System_Ext(iamcalemojidata, "iamcal/emoji-data", "Central Emoji Data and Images", $tags="")[[https://github.com/iamcal/emoji-data]]
+}
+
+Person_Ext(TwitterUser, "Twitter User", "A user of the Twitter platform", $tags="")
+
+Rel_D(Twitter, Iris, "Receives data stream", $tags="")
+Rel_D(Iris, iamcalemojidata, "Retrieves latest Emoji Data and Images", $tags="")
+Rel_D(Iris, IrisUser, "Review", "Pushes Real Time Tweet Metrics to User", $tags="")
+Rel_D(TwitterUser, Twitter, "Tweets", "A Tweet is added to the platform", $tags="")
+
+SHOW_LEGEND()
+@enduml
