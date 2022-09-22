@@ -1,0 +1,41 @@
+@startuml
+title Iris - Event Kernel - Components
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(Iris.Aggregator, "Aggregator", "Docker", "The data Aggregator supplying metrics from Twitter Data", $tags="")
+Container(Iris.Dashboard, "Dashboard", "Docker", "The real time view of the aggregated data", $tags="")
+Container(Iris.Ingress, "Ingress", "Docker", "The Twitter Data Source", $tags="")
+
+Container_Boundary("Iris.EventKernel_boundary", "Event Kernel") {
+  Component(Iris.EventKernel.Raw, "Raw", "A Table for Raw Tweet Data", $tags="")
+  Component(Iris.EventKernel.Emojis, "Emojis", "A Table of Emoji Data", $tags="")
+  Component(Iris.EventKernel.HashTags, "HashTags", "A Table of HashTag Data", $tags="")
+  Component(Iris.EventKernel.Annotations, "Annotations", "A Table of Annotation Data", $tags="")
+  Component(Iris.EventKernel.Mentions, "Mentions", "A Table of Mention Data", $tags="")
+  Component(Iris.EventKernel.Images, "Images", "A Table of Image Data", $tags="")
+  Component(Iris.EventKernel.Urls, "Urls", "A Table of Url Data", $tags="")
+}
+
+Rel_D(Iris.Ingress, Iris.EventKernel.Raw, "Push", $tags="")
+Rel_D(Iris.EventKernel.Raw, Iris.Aggregator, "Poll", $tags="")
+Rel_D(Iris.Aggregator, Iris.EventKernel.Emojis, "Push", $tags="")
+Rel_D(Iris.EventKernel.Emojis, Iris.Dashboard, "Poll", $tags="")
+Rel_D(Iris.Aggregator, Iris.EventKernel.HashTags, "Push", $tags="")
+Rel_D(Iris.EventKernel.HashTags, Iris.Dashboard, "Poll", $tags="")
+Rel_D(Iris.Aggregator, Iris.EventKernel.Annotations, "Push", $tags="")
+Rel_D(Iris.EventKernel.Annotations, Iris.Dashboard, "Poll", $tags="")
+Rel_D(Iris.Aggregator, Iris.EventKernel.Mentions, "Push", $tags="")
+Rel_D(Iris.EventKernel.Mentions, Iris.Dashboard, "Poll", $tags="")
+Rel_D(Iris.Aggregator, Iris.EventKernel.Images, "Push", $tags="")
+Rel_D(Iris.EventKernel.Images, Iris.Dashboard, "Poll", $tags="")
+Rel_D(Iris.Aggregator, Iris.EventKernel.Urls, "Push", $tags="")
+Rel_D(Iris.EventKernel.Urls, Iris.Dashboard, "Poll", $tags="")
+
+SHOW_LEGEND()
+@enduml
